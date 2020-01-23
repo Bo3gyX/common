@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!--Консольный аппендер -->
+    <appender name="ConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight(%-5level)[%d][%thread] %cyan(%logger{40}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <!--Асинхронные аппендер -->
+    <appender name="AsyncConsoleAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="ConsoleAppender"/>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="ConsoleAppender"/>
+    </root>
+
+</configuration>
