@@ -64,7 +64,7 @@ object Verb {
     val bore  = apply("bore", "bɔː(r)")
     val borne = apply("borne", "bɔːn")
 
-    val become = apply("become", "bɪˈkʌm", singular1stAndPlural)
+    val become  = apply("become", "bɪˈkʌm", singular1stAndPlural)
     val becomes = apply("becomes", "bɪˈkʌmz", singular3rd)
   }
 
