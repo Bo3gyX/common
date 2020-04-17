@@ -7,6 +7,6 @@ abstract class AkkaApp(val actorSystemName: String) extends Application with Act
   implicit lazy val materializer: Materializer = ActorMaterializer()
 
   onStop {
-    actorSystem.terminate()
+//    actorSystem.terminate()
   }
 }

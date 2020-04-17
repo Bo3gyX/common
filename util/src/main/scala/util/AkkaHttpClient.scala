@@ -35,9 +35,6 @@ trait AkkaHttpClient extends Logger {
   }
 
   def doRequest[T](req: HttpRequest)(pf: PartialFunction[HttpResponse, Future[T]]): Future[T] = {
-
-    println(req)
-
     val st = System.currentTimeMillis()
 
     Http().singleRequest(req, hctx).flatMap { response =>

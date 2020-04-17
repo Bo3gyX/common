@@ -1,16 +1,20 @@
 package common
 
-import util.{AkkaApp, Logger}
+import java.io.OutputStream
 
-import scala.concurrent.Future
+import util.AkkaApp
 
-object Main extends AkkaApp("Common") with Logger {
 
-  trait Item
+object Main extends AkkaApp("Common") {
 
-  trait Dao {
-    def get(id: String): Future[Item]
-    def set(item: Item): Future[Boolean]
+  case class Foo(os: OutputStream, name: String) {
+
   }
+
+  val f1 = new Foo(_: OutputStream, "f1")
+  val f2 = new Foo(_: OutputStream, "f2")
+
+  println(f1)
+  println(f2)
 
 }
