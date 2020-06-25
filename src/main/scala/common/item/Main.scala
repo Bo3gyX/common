@@ -1,109 +1,50 @@
 package common.item
 
 import _root_.util.AkkaApp
-import play.api.libs.json._
+
+import scala.collection.mutable
 
 object Main extends AkkaApp("Common-Item") {
 
-  val json =
-    """
-      |[{
-      | "type": "food",
-      | "name": "apple",
-      | "desc": {
-      |   "value": 5
-      | }
-      |},
-      |{
-      | "type": "food",
-      | "name": "egg",
-      | "desc": {
-      |   "value": 6
-      | }
-      |},
-      |{
-      | "type": "tool",
-      | "name": "wrench",
-      | "desc": {
-      |   "durability": 5,
-      |   "productivity": 3
-      | }
-      |},
-      |{
-      | "type": "weapon",
-      | "name": "ak47",
-      | "desc": {
-      |   "durability": 10,
-      |   "damage": 10
-      | }
-      |}]
-      |""".stripMargin
+  val d1 = Description.Food("apple", 1, 1)
+  val d2 = Description.Food("milk", 1, 3)
 
-  trait ItemProperties
+  val i1 = d1.create
+  val i2 = d1.create
+  val i3 = d2.create
 
-  object ItemProperties {
+  println(i1 == i2)
+  println(i1 == i3)
 
-    trait Durability extends ItemProperties {
-      def durability: Int
+  class Stack[I, D <: Stack.DESC[I]](i: Stack.IT[I, D], s: Stack.IT[I, D]*) {
+    private val _items: mutable.Buffer[I] = mutable.Buffer(i) ++ s
+
+    def items: List[I] = _items.toList
+
+    def add(i: I*): this.type = {
+      _items.appendAll(i)
+      this
     }
 
-    trait Productivity extends ItemProperties {
-      def productivity: Int
-    }
-
-    trait Damage extends ItemProperties {
-      def damage: Int
-    }
-
-    trait Eatable extends ItemProperties {
-      def value: Int
+    def remove(count: Int): this.type = {
+      _items.remove(0, count)
+      this
     }
   }
 
-  abstract class ItemType(val name: String)
-
-  object ItemType {
-    case object Food   extends ItemType("food")
-    case object Tool   extends ItemType("tool")
-    case object Weapon extends ItemType("weapon")
-
-    val values: Seq[ItemType] = Seq(Food, Tool, Weapon)
-
-    def get(name: String): ItemType =
-      unapply(name).getOrElse(throw new Exception(s"ItemType $name not defined"))
-
-    def unapply(name: String): Option[ItemType] = values.find(_.name == name)
-
+  object Stack {
+    type IT[I, D] = I {
+      type DESC = D
+    }
+    type DESC[I] = Description {
+      type ITEM = I
+    }
   }
 
-  abstract class ItemDescription[T <: ItemType](val itemType: T)
+  val s1 = new Stack(i1)
 
-  object ItemDescription {
-
-    case class Food(value: Int) extends ItemDescription(ItemType.Food) with ItemProperties.Eatable
-
-    case class Tool(durability: Int, productivity: Int)
-      extends ItemDescription(ItemType.Tool)
-      with ItemProperties.Durability
-      with ItemProperties.Productivity
-
-    case class Weapon(durability: Int, damage: Int)
-      extends ItemDescription(ItemType.Weapon)
-      with ItemProperties.Durability
-      with ItemProperties.Damage
+  s1.items.foreach { i =>
+    println(s"desc: ${i.desc.name}, ${i.portion}")
   }
-
-  implicit val jsonItemType: Format[ItemType] = new Format[ItemType] {
-    override def writes(o: ItemType): JsValue             = JsString(o.name)
-    override def reads(json: JsValue): JsResult[ItemType] = json.validate[String].map(ItemType.get)
-  }
-
-  implicit val jsonItemDescriptionFood: Format[ItemDescription.Food]     = Json.format[ItemDescription.Food]
-  implicit val jsonItemDescriptionTool: Format[ItemDescription.Tool]     = Json.format[ItemDescription.Tool]
-  implicit val jsonItemDescriptionWeapon: Format[ItemDescription.Weapon] = Json.format[ItemDescription.Weapon]
-
-  val desc1 = ItemDescription.Food(1000)
-  val desc2 = ItemDescription.Tool(100, 3)
-  val desc3 = ItemDescription.Weapon(70, 10)
 
 }

@@ -33,7 +33,7 @@ lazy val util = (project in file("util"))
   .settings(
     name                := "util",
     libraryDependencies ++= logging,
-    libraryDependencies += playJson,
+    libraryDependencies ++= Seq(playJson, playJsonExt),
     libraryDependencies ++= Seq(akkaSlf4j, akkaActor, akkaStream, akkaHttp),
-//    libraryDependencies ++= Seq(zio, shapeless, cats),
+    libraryDependencies ++= Seq(zio, shapeless, cats),
   )
