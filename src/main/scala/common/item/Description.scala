@@ -1,6 +1,6 @@
 package common.item
 
-sealed trait Description { self =>
+sealed abstract class Description(val category: Category) { self =>
   type CAT <: Category
   type ITEM <: InnerItem
 
@@ -15,21 +15,21 @@ sealed trait Description { self =>
 
 object Description {
 
-  case class Food(name: String, portion: Int, restore: Int) extends Description {
+  case class Food(name: String, portion: Int, restore: Int) extends Description(Category.Food) {
     override type CAT  = Category.Food.type
     override type ITEM = Food
-    case class Food(portion: Int) extends InnerItem
+    case class Food(portion: Int) extends InnerItem with Item.Stackable
     override def create: ITEM = Food(portion)
   }
 
-  case class Weapon(name: String, damage: Int, rate: Int, capacity: Int) extends Description {
+  case class Weapon(name: String, damage: Int, rate: Int, capacity: Int) extends Description(Category.Weapon) {
     override type CAT  = Category.Weapon.type
     override type ITEM = Weapon
     case class Weapon(damage: Int, ammo: Int) extends InnerItem
     override def create: ITEM = Weapon(damage, capacity)
   }
 
-  case class Tool(name: String, repair: Int, durability: Int) extends Description {
+  case class Tool(name: String, repair: Int, durability: Int) extends Description(Category.Tool) {
     override type CAT  = Category.Tool.type
     override type ITEM = Tool
     case class Tool(durability: Int) extends InnerItem
