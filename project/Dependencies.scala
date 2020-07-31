@@ -18,4 +18,7 @@ object Dependencies {
   lazy val shapeless = "com.chuusai"   %% "shapeless" % "2.3.3"
   lazy val cats      = "org.typelevel" %% "cats-core" % "2.1.0"
   lazy val zio       = "dev.zio"       %% "zio"       % "1.0.0-RC17"
+
+  //image support
+  lazy val im4java = "org.im4java" % "im4java" % "1.4.0"
 }
