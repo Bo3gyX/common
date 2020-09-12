@@ -20,5 +20,9 @@ object Dependencies {
   lazy val zio       = "dev.zio"       %% "zio"       % "1.0.0-RC17"
 
   //image support
-  lazy val im4java = "org.im4java" % "im4java" % "1.4.0"
+  lazy val ffmpeg = "net.bramp.ffmpeg" % "ffmpeg"  % "0.6.2"
+  lazy val im4java = "org.im4java"     % "im4java" % "1.4.0"
+  lazy val images = Seq(ffmpeg, im4java)
+
+  lazy val protoUtils = "com.google.protobuf" % "protobuf-java-util" % "3.13.0"
 }

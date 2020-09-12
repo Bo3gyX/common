@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package scalapb;
+option java_package = "protobuf.panorama";
+
+message ExteriorPoi {
+    Poi poi = 1;
+    ExteriorProperty properties = 2;
+}
+
+message InteriorPoi {
+    Poi poi = 1;
+    InteriorProperty properties = 2;
+}
+
+message ExteriorProperty {
+    TextProperty text = 1;
+    VideoProperty youtube = 2;
+    repeated ImageProperty image = 3;
+}
+
+message InteriorProperty {
+    TextProperty text = 1;
+    repeated ImageProperty image = 3;
+}
+
+message Poi {
+    string id = 1;
+    string name = 2;
+    RelativeCoordinate coordinate = 3;
+}
+
+message TextProperty {
+    string text = 1;
+}
+
+message ImageProperty {
+    string link = 1;
+}
+
+message VideoProperty {
+    string link = 1;
+}
+
+message RelativeCoordinate {
+    double x = 1; // required between 0 and 1
+    double y = 2; // required between 0 and 1
+}
