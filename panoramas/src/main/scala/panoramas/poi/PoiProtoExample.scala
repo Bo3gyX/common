@@ -37,7 +37,7 @@ object PoiProtoExample {
     .build()
 
   val interiorPoi = {
-    val poi = PanoramaModels.Poi
+    val point = PanoramaModels.Point
       .newBuilder()
       .setId("xxx-yyy-zzz")
       .setName("STEERING-WHEEL")
@@ -50,13 +50,13 @@ object PoiProtoExample {
 
     PanoramaModels.InteriorPoi
       .newBuilder()
-      .setPoi(poi)
+      .setPoint(point)
       .setProperties(properties)
       .build()
   }
 
   val exteriorPoi = {
-    val poi = PanoramaModels.Poi
+    val point = PanoramaModels.Point
       .newBuilder()
       .setId("aaa-bbb-ccc")
       .setName("WHEEL")
@@ -70,7 +70,7 @@ object PoiProtoExample {
 
     PanoramaModels.ExteriorPoi
       .newBuilder()
-      .setPoi(poi)
+      .setPoint(point)
       .setProperties(properties)
       .build()
   }

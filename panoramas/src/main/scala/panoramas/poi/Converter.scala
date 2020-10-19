@@ -1,6 +1,7 @@
 package panoramas.poi
 
 import panoramas.poi.Converter._
+import play.api.libs.json.JsValue
 
 import scala.jdk.CollectionConverters._
 

@@ -26,22 +26,15 @@ trait ExteriorProtoConverter extends CommonProtoConverter {
     new MessageConverter[PanoramaModels.ExteriorPoi, ExteriorPoi] {
 
       override def writes(obj: ExteriorPoi): PanoramaModels.ExteriorPoi = {
-        val poi = PanoramaModels.Poi
-          .newBuilder()
-          .setId(obj.id)
-          .setName(obj.name)
-          .setCoordinate(obj.coordinate)
-          .build()
-
         PanoramaModels.ExteriorPoi
           .newBuilder()
-          .setPoi(poi)
+          .setPoint(obj.point)
           .setProperties(obj.properties)
           .build()
       }
 
       override def reads(obj: PanoramaModels.ExteriorPoi): ExteriorPoi = {
-        ExteriorPoi(obj.getPoi.getId, obj.getPoi.getName, obj.getPoi.getCoordinate, obj.getProperties)
+        ExteriorPoi(obj.getPoint, obj.getProperties)
       }
     }
 }

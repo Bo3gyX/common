@@ -25,22 +25,15 @@ trait InteriorProtoConverter extends CommonProtoConverter {
     new MessageConverter[PanoramaModels.InteriorPoi, InteriorPoi] {
 
       override def writes(obj: InteriorPoi): PanoramaModels.InteriorPoi = {
-        val poi = PanoramaModels.Poi
-          .newBuilder()
-          .setId(obj.id)
-          .setName(obj.name)
-          .setCoordinate(obj.coordinate)
-          .build()
-
         PanoramaModels.InteriorPoi
           .newBuilder()
-          .setPoi(poi)
+          .setPoint(obj.point)
           .setProperties(obj.properties)
           .build()
       }
 
       override def reads(obj: PanoramaModels.InteriorPoi): InteriorPoi = {
-        InteriorPoi(obj.getPoi.getId, obj.getPoi.getName, obj.getPoi.getCoordinate, obj.getProperties)
+        InteriorPoi(obj.getPoint, obj.getProperties)
       }
     }
 }

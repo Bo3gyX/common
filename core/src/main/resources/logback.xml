@@ -16,7 +16,7 @@
         <appender-ref ref="ConsoleAppender"/>
     </appender>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="ConsoleAppender"/>
     </root>
 

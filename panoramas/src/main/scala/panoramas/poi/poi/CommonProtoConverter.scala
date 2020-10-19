@@ -2,7 +2,8 @@ package panoramas.poi.poi
 
 import com.google.protobuf.Message
 import panoramas.poi.Converter
-import panoramas.poi.poi.Poi.{Coordinate, Property}
+import panoramas.poi.Converter._
+import panoramas.poi.poi.Poi.{Coordinate, Point, Property}
 import protobuf.panorama.PanoramaModels
 
 trait CommonProtoConverter {
@@ -54,6 +55,18 @@ trait CommonProtoConverter {
 
       override def reads(obj: PanoramaModels.VideoProperty): Property.Video = {
         Property.Video(obj.getLink)
+      }
+    }
+
+  implicit val cnvPoint: MessageConverter[PanoramaModels.Point, Point] =
+    new MessageConverter[PanoramaModels.Point, Point] {
+
+      override def writes(obj: Point): PanoramaModels.Point = {
+        PanoramaModels.Point.newBuilder().setId(obj.id).setName(obj.name).setCoordinate(obj.coordinate).build()
+      }
+
+      override def reads(obj: PanoramaModels.Point): Point = {
+        Point(obj.getId, obj.getName, obj.getCoordinate)
       }
     }
 }

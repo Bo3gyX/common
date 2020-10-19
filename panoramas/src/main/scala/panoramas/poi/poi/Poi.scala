@@ -1,14 +1,14 @@
 package panoramas.poi.poi
 
-import panoramas.poi.poi.Poi.Coordinate
+import panoramas.poi.poi.Poi.Point
 
 trait Poi {
-  def id: String
-  def name: String
-  def coordinate: Coordinate
+  def point: Point
 }
 
 object Poi {
+  case class Point(id: String, name: String, coordinate: Coordinate)
+
   case class Coordinate(x: Double, y: Double)
 
   sealed trait Property
