@@ -42,12 +42,19 @@ lazy val util = (project in file("util"))
     libraryDependencies ++= logging,
     libraryDependencies ++= Seq(playJson, playJsonExt),
     libraryDependencies ++= Seq(akkaSlf4j, akkaActor, akkaStream, akkaHttp),
-    libraryDependencies ++= Seq(zio, shapeless, cats)
+    libraryDependencies ++= Seq(zio, zioLogging, zioLoggingSlf4j),
+    libraryDependencies ++= Seq(shapeless, cats, tagging),
+    libraryDependencies ++= Seq(xml),
+    libraryDependencies ++= circe :+ circeGenericExtras,
+    libraryDependencies += phoneNumber,
+    libraryDependencies += enumeratum,
+    libraryDependencies ++= Seq(sttp3BackendZio, sttpModel, asyncHttpClient),
+    libraryDependencies ++= monocle,
   )
 
 lazy val proto = (project in file("proto"))
   .settings(
-    name := "proto",
+    name                := "proto",
     libraryDependencies += protoUtils,
     PB.targets in Compile := Seq(
       PB.gens.java -> (sourceManaged in Compile).value,

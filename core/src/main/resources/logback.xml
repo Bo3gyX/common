@@ -9,6 +9,19 @@
     </appender>
 
 
+    <appender name="StdoutJsonAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <timestamp>_time</timestamp>
+                <message>_message</message>
+                <logger>_context</logger>
+                <level>_level</level>
+                <thread>_thread</thread>
+            </fieldNames>
+            <includeContext>false</includeContext>
+        </encoder>
+    </appender>
+
     <!--Асинхронные аппендер -->
     <appender name="AsyncConsoleAppender" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>1024</queueSize>

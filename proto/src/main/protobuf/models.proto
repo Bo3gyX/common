@@ -15,3 +15,8 @@ enum Status {
     COMPLETED = 3;
     FAILED = 4;
 }
+
+message Photo {
+    string origin = 1;
+    map<string, string> sizes = 2;
+}

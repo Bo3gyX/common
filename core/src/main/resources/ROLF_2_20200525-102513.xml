@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RESULT>
+    <EVENT>
+        <ID>AMV0378172</ID>
+        <VIN>X4XYB81160D247134</VIN>
+        <EVENT_TYPE>2</EVENT_TYPE>
+        <INFO>
+            <EVENT_DATE>2016-02-04</EVENT_DATE>
+            <EVENT_REGION>Московская область</EVENT_REGION>
+            <EVENT_CITY>Химки</EVENT_CITY>
+            <STO_ID>123</STO_ID>
+            <STO_NAME>РОЛЬФ Химки</STO_NAME>
+            <MARK>BMW</MARK>
+            <MODEL>750D XDRIVE</MODEL>
+            <YEAR>2013</YEAR>
+            <MILEAGE>83456</MILEAGE>
+            <AMOUNT>25500</AMOUNT>
+            <CURRENCY>rub</CURRENCY>
+            <IS_PLANNED>0</IS_PLANNED>
+            <TYPE>ordinary_paid</TYPE>
+            <DESCRIPTION>Замена тормозных дисков</DESCRIPTION>
+            <IMAGES>
+                <IMAGE>
+                    <ORIG_URL>http://image1</ORIG_URL>
+                    <IMAGE_TYPE>jpg</IMAGE_TYPE>
+                </IMAGE>
+                <IMAGE>
+                    <ORIG_URL>http://image2</ORIG_URL>
+                    <IMAGE_TYPE>jpg</IMAGE_TYPE>
+                </IMAGE>
+            </IMAGES>
+            <VIDEOS>
+                <VIDEO>
+                    <URL>http://video1</URL>
+                    <VIDEO_TYPE>avi</VIDEO_TYPE>
+                </VIDEO>
+                <VIDEO>
+                    <URL>http://video2</URL>
+                    <VIDEO_TYPE>mov</VIDEO_TYPE>
+                </VIDEO>
+            </VIDEOS>
+            <DAMAGES>
+                <DESCRIPTION>desc1</DESCRIPTION>
+                <DAMAGES_LIST>
+                    <DAMAGE>
+                        <PART>1</PART>
+                        <DESCRIPTION>desc1</DESCRIPTION>
+                        <IMAGE>
+                            <ORIG_URL>http://image_elem_1</ORIG_URL>
+                            <IMAGE_TYPE>jpg</IMAGE_TYPE>
+                        </IMAGE>
+                    </DAMAGE>
+                    <DAMAGE>
+                        <PART>2</PART>
+                        <DESCRIPTION>desc2</DESCRIPTION>
+                        <IMAGE>
+                            <ORIG_URL>http://image_elem_2</ORIG_URL>
+                            <IMAGE_TYPE>jpg</IMAGE_TYPE>
+                        </IMAGE>
+                    </DAMAGE>
+                </DAMAGES_LIST>
+            </DAMAGES>
+            <CLIENT_TYPE>0</CLIENT_TYPE>
+        </INFO>
+    </EVENT>
+</RESULT>
