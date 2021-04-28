@@ -2,9 +2,15 @@ import Dependencies._
 
 ThisBuild / organizationName := "Rivergnom"
 ThisBuild / organization     := "com.rivergnom.common"
-ThisBuild / scalaVersion     := "2.13.0"
+ThisBuild / scalaVersion     := "2.13.5"
 scalacOptions in ThisBuild   ++= Seq("-unchecked", "-deprecation")
 enablePlugins(PackPlugin)
+
+lazy val bank = (project in file("bank"))
+  .settings(
+    name := "bank"
+  )
+  .dependsOn(core, util)
 
 lazy val panoramas = (project in file("panoramas"))
   .settings(
@@ -27,7 +33,9 @@ lazy val scheduler = (project in file("scheduler"))
 
 lazy val common = (project in file("."))
   .settings(
-    name := "common"
+    name := "common",
+    libraryDependencies ++= zioTest,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .dependsOn(core, util, proto)
 
@@ -50,6 +58,8 @@ lazy val util = (project in file("util"))
     libraryDependencies += enumeratum,
     libraryDependencies ++= Seq(sttp3BackendZio, sttpModel, asyncHttpClient),
     libraryDependencies ++= monocle,
+    libraryDependencies ++= zioTest,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
 lazy val proto = (project in file("proto"))

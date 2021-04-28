@@ -1,50 +1,31 @@
 package common
 
-import common.zioapp.ZioRunner
+import util.zio.ZioRunner
+import zio._
 import zio.clock.Clock
-import zio.logging.{log, Logging}
-import zio.{UIO, _}
 
-import java.io.IOException
-import scala.io.Source
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 object ZioApp extends ZioRunner {
 
+  def opt: Option[String] = throw new Exception("AAA")
+
   override def start = {
-    val eff = ZIO.infinity
-    eff
-  }
-
-  trait Loader[R] {
-    def load(v: String): ZIO[R, IOException, String]
-  }
-
-  trait LoggerLoader[R] extends Loader[R with Logging] {
-
-    abstract override def load(v: String): ZIO[R with Logging, IOException, String] =
-      log.info("load") *> super.load(v)
-  }
-
-  trait RetryLoader[R] extends Loader[R with Clock] {
-
-    abstract override def load(v: String): ZIO[R with Clock, IOException, String] =
-      super.load(v).retry(Schedule.recurs(3))
-  }
-
-  class StringLoader[R] extends Loader[R] {
-
-    override def load(v: String): ZIO[R, IOException, String] = {
-      Managed.make(open(v))(close).use(use).mapError(mapError)
+//    val eff = ZIO.unit
+    val eff = for {
+      clock <- ZIO.service[Clock.Service]
+      t1 <- clock.localDateTime
+      t2 <- clock.instant
+    } yield {
+      val t21 = t2.atZone(ZoneOffset.UTC)
+      println(t1)
+      println(t2)
+      println(t21.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
     }
 
-    private def open(name: String): Task[Source] = Task(Source.fromFile(name))
-    private def close(s: Source): UIO[Unit]      = UIO(s.close())
-    private def use(s: Source): Task[String]     = Task(s.getLines().mkString)
-
-    private def mapError(e: Throwable): IOException = e match {
-      case err: IOException => err
-      case err              => new IOException(err)
-    }
+    eff.onError(err => URIO.succeed(println(err.prettyPrint)))
   }
+
 
 }

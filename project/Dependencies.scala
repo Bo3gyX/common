@@ -1,3 +1,4 @@
+import sbt.Keys.libraryDependencies
 import sbt._
 
 object Dependencies {
@@ -27,9 +28,19 @@ object Dependencies {
   lazy val akkaHttp   = "com.typesafe.akka" %% "akka-http"   % "10.2.2"
 
   //todo то что хочется понять и научится юзать
-  lazy val shapeless       = "com.chuusai"             %% "shapeless"         % "2.3.3"
-  lazy val cats            = "org.typelevel"           %% "cats-core"         % "2.1.0"
-  lazy val zio             = "dev.zio"                 %% "zio"               % "1.0.3"
+  lazy val shapeless = "com.chuusai"   %% "shapeless" % "2.3.3"
+  lazy val cats      = "org.typelevel" %% "cats-core" % "2.1.0"
+  lazy val zio       = "dev.zio"       %% "zio"       % "1.0.3"
+
+//  lazy val zioTest = "dev.zio" %% "zio-test"     % "1.0.3"
+//  lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "1.0.3"
+  //"dev.zio" %% "zio-test-magnolia" % "1.0.3" % "test" // optional
+  lazy val zioTest = Seq(
+    "dev.zio" %% "zio-test"          % "1.0.3" % "test",
+    "dev.zio" %% "zio-test-sbt"      % "1.0.3" % "test",
+    "dev.zio" %% "zio-test-magnolia" % "1.0.3" % "test" // optional
+  )
+
   lazy val zioLogging      = "dev.zio"                 %% "zio-logging"       % "0.5.4"
   lazy val zioLoggingSlf4j = "dev.zio"                 %% "zio-logging-slf4j" % "0.5.4"
   lazy val tagging         = "com.softwaremill.common" %% "tagging"           % "2.2.1"

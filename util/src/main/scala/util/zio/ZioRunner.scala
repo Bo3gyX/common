@@ -1,9 +1,9 @@
-package common.zioapp
+package util.zio
 
 import zio._
 import zio.duration.durationInt
 import zio.logging.slf4j._
-import zio.logging.{log, LogAnnotation, Logging}
+import zio.logging.{LogAnnotation, Logging, log}
 
 trait ZioRunner extends App {
 
@@ -39,7 +39,7 @@ trait ZioRunner extends App {
   private def failure[T](error: T) = {
     error match {
       case err: Throwable =>
-        log.error(s"Throwable: ${err.getMessage}")
+        log.error(s"Throwable: $err")
       case err =>
         log.error(s"Error: $err")
     }

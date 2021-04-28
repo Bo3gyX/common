@@ -1,0 +1,268 @@
+{
+  "clientContext": {
+    "version": "prt_1.0",
+    "clientDateTime": "2019-09-22T22:00:15-03:00",
+    "params": [
+      {
+        "key": "partner",
+        "value": "17"
+      }
+    ]
+  },
+  "operation": {
+    "values": [
+      {
+        "id": "carCredit.new",
+        "value": "false"
+      },
+      {
+        "id": "carCredit.price",
+        "value": "1000000"
+      },
+      {
+        "id": "##client.desiredAmount",
+        "value": "100000"
+      },
+      {
+        "id": "creditParameters.currencyCode",
+        "value": "RUB"
+      },
+      {
+        "id": "creditParameters.creditTerm",
+        "value": "24"
+      },
+      {
+        "id": "creditParameters.insurance",
+        "value": "true"
+      },
+      {
+        "id": "carCredit.pawn",
+        "value": "true"
+      },
+      {
+        "id": "##location",
+        "value": "0c5b2444-70a0-4932-980c-b4dc0d3f02b5"
+      },
+      {
+        "id": "participants.0.surname",
+        "value": "Сидоров"
+      },
+      {
+        "id": "participants.0.name",
+        "value": "Иван"
+      },
+      {
+        "id": "participants.0.sexCode",
+        "value": "1"
+      },
+      {
+        "id": "##completeName.manual",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.contacts.2.email",
+        "value": "is@x.com"
+      },
+      {
+        "id": "participants.0.contacts.0.phoneNumber",
+        "value": "79636011217"
+      },
+      {
+        "id": "participants.0.clientConsents.consentAll",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.clientConsents.send_smsid",
+        "value": "1234"
+      },
+      {
+        "id": "participants.0.clientConsents.phone",
+        "value": "79636011217"
+      },
+      {
+        "id": "participants.0.clientConsents.code_otp",
+        "value": "4321"
+      },
+      {
+        "id": "participants.0.clientConsents.check_time",
+        "value": "2021-01-01T09:29:20+03:00"
+      },
+      {
+        "id": "##borrower.ConsentSimpleSign",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.residentStatus",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.birthDate",
+        "value": "1980-01-10"
+      },
+      {
+        "id": "participants.0.birthCountry",
+        "value": "643"
+      },
+      {
+        "id": "participants.0.birthPlace",
+        "value": "Москва"
+      },
+      {
+        "id": "participants.0.identityDocuments.0.docSeries",
+        "value": "3604"
+      },
+      {
+        "id": "participants.0.identityDocuments.0.docNum",
+        "value": "123456"
+      },
+      {
+        "id": "participants.0.identityDocuments.0.issueDate",
+        "value": "2013-07-07"
+      },
+      {
+        "id": "participants.0.identityDocuments.0.departCode",
+        "value": "770001"
+      },
+      {
+        "id": "participants.0.identityDocuments.0.issuedBy",
+        "value": "Кем то"
+      },
+      {
+        "id": "##borrower.isOldPersonalPassportRF",
+        "value": "false"
+      },
+      {
+        "id": "##borrower.isOldPersonalData",
+        "value": "false"
+      },
+      {
+        "id": "##address.manual",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.addresses.0.postalCode",
+        "value": "350039"
+      },
+      {
+        "id": "##participants.0.addresses.0.regionCode",
+        "value": "7700000000000"
+      },
+      {
+        "id": "participants.0.addresses.0.city",
+        "value": "Московье"
+      },
+      {
+        "id": "participants.0.addresses.0.street",
+        "value": "Коломенское шоссе"
+      },
+      {
+        "id": "participants.0.addresses.0.house",
+        "value": "3"
+      },
+      {
+        "id": "participants.0.regLive",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.contacts.1.phoneNumber",
+        "value": "79154367367"
+      },
+      {
+        "id": "participants.0.incomes.0.avgMonthlyIncome",
+        "value": "80000"
+      },
+      {
+        "id": "participants.0.PfrStatement",
+        "value": "true"
+      },
+      {
+        "id": "participants.0.employment.0.employmentTypeCode",
+        "value": "Бессрочный трудовой договор"
+      },
+      {
+        "id": "participants.0.employment.0.employers.fullName",
+        "value": "Копыта и Рога"
+      },
+      {
+        "id": "participants.0.employment.0.employers.inn",
+        "value": "1234567890"
+      },
+      {
+        "id": "participants.0.employment.0.employers.activityKindCode",
+        "value": "Добывающая пром-ть"
+      },
+      {
+        "id": "participants.0.employment.0.positionCategoryCode",
+        "value": "Специалист / Рабочий"
+      },
+      {
+        "id": "participants.0.employment.0.positionName",
+        "value": "Специалист / Рабочий"
+      },
+      {
+        "id": "participants.0.employment.0.employers.contacts.0.phoneNumber",
+        "value": "74994677576"
+      },
+      {
+        "id": "participants.0.employment.0.lastExperience.years",
+        "value": "7"
+      },
+      {
+        "id": "participants.0.employment.0.lastExperience.months",
+        "value": "1"
+      },
+      {
+        "id": "participants.0.employment.0.totalExperience.years",
+        "value": "7"
+      },
+      {
+        "id": "participants.0.employment.0.totalExperience.months",
+        "value": "1"
+      },
+      {
+        "id": "participants.0.educationCode",
+        "value": "Высшее"
+      },
+      {
+        "id": "participants.0.maritalStatusId.statusCode",
+        "value": "холост / не замужем"
+      },
+      {
+        "id": "participants.0.maritalStatusId.dependentsCount",
+        "value": "0"
+      },
+      {
+        "id": "participants.0.properties.0.existence",
+        "value": "false"
+      },
+      {
+        "id": "participants.0.properties.1.existence",
+        "value": "false"
+      },
+      {
+        "id": "kindGet",
+        "value": "2"
+      },
+      {
+        "id": "participants.0.addresses.2.house",
+        "value": "2"
+      },
+      {
+        "id": "##address.manual3",
+        "value": "true"
+      },
+      {
+        "id": "courierTime",
+        "value": "4"
+      },
+      {
+        "id": "controlInfo",
+        "value": "симсим"
+      },
+      {
+        "id": "creditParameters.paymentDay",
+        "value": "8"
+      }
+    ]
+  }
+}

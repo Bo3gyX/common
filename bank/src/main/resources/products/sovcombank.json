@@ -1,0 +1,197 @@
+{
+  "id": "sovcombank-1",
+  "bank_type": "SOVCOMBANK",
+  "product_type": "AUTO",
+  "domain": "DOMAIN_AUTO",
+  "amount_range": {
+    "from": 100000,
+    "to": 1000000
+  },
+  "interest_rate_range": {
+    "from": 0.0,
+    "to": 21.9
+  },
+  "term_months_range": {
+    "from": 18,
+    "to": 60
+  },
+  "min_initial_fee_rate": 0,
+  "geobase_ids": [11235, 11375, 10842, 10946, 10645, 10650, 10658, 10950, 10853, 10672, 213, 2, 10243, 21949, 10687, 11266, 11013, 10857, 10693, 11398, 11020, 11282, 11070, 10699, 10995, 11309, 11158, 10705, 10174, 10712, 11403, 1, 10897, 11079, 10904, 11316, 11318, 11084, 10772, 11095, 11108, 11409, 10926, 11004, 10231, 11111, 11330, 11015, 10933, 10939, 11077, 11117, 11443, 11119, 11340, 11029, 10776, 11131, 11146, 11450, 11162, 10795, 11069, 10802, 10819, 11353, 10832, 11176, 11148, 11153, 11457, 11193, 11225, 11156, 11232, 10841],
+  "borrower_conditions": {
+    "employment_types": [
+      "EMPLOYEE"
+    ],
+    "income_after_expenses": 0,
+    "income_without_expense": 20000,
+    "min_last_experience_months": 4,
+    "age_range": {
+      "from": 20,
+      "to": 85
+    },
+    "check_age_without_term": false
+  },
+  "is_active": false,
+  "credit_product_payload": {
+    "auto": {}
+  },
+  "credit_application_info_blocks": [
+    {
+      "block_type": "CONTROL_WORD",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "OKB_STATEMENT_AGREEMENT",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "ADVERT_STATEMENT_AGREEMENT",
+      "required_condition": {
+        "always": {}
+      }
+    }
+  ],
+  "borrower_person_profile_blocks": [
+    {
+      "block_type": "NAME",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "OLD_NAME",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "GENDER",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "PASSPORT_RF",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "OLD_PASSPORT_RF",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "FOREIGN_PASSPORT",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "INSURANCE_NUMBER",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "DRIVER_LICENSE",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "BIRTH_DATE",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "BIRTH_PLACE",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "RESIDENCE_ADDRESS",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "REGISTRATION_ADDRESS",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "EDUCATION",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "MARITAL_STATUS",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "DEPENDENTS",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "INCOME",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "EXPENSES",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "PROPERTY_OWNERSHIP",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "VEHICLE_OWNERSHIP",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "EMPLOYMENT",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "RELATED_PERSONS",
+      "allowed_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "PHONES",
+      "required_condition": {
+        "always": {}
+      }
+    },
+    {
+      "block_type": "EMAILS",
+      "required_condition": {
+        "always": {}
+      }
+    }
+  ]
+}
