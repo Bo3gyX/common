@@ -91,7 +91,7 @@ object MyHttpClient extends App with Logger {
 
       clientBuilder = proxy match {
         case None => clientBuilder
-        case Some(p @ Proxy(_, _, _, _, Some(auth))) =>
+        case Some(p @ Proxy(_, _, _, _, Some(auth), _)) =>
           clientBuilder.proxy(p.asJavaProxySelector).authenticator(new ProxyAuthenticator(auth))
         case Some(p) => clientBuilder.proxy(p.asJavaProxySelector)
       }

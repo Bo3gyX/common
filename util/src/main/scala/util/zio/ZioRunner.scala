@@ -18,7 +18,7 @@ trait ZioRunner extends App {
   override def run(args: List[String]): URIO[ZEnv, ExitCode] = {
     val eff = for {
       _ <- log.info("app run")
-      _ <- processing.raceFirst(timeout)
+      _ <- processing//.raceFirst(timeout)
       _ <- log.info("app finish")
     } yield ()
 
@@ -49,7 +49,7 @@ trait ZioRunner extends App {
     log.info(s"Complete: $a")
   }
 
-  private val loggingLayer = {
+  protected val loggingLayer = {
     Slf4jLogger.make { (context, message) =>
       if (context.get(LogAnnotation.CorrelationId).nonEmpty)
         "[correlation-id = %s] %s".format(context(LogAnnotation.CorrelationId), message)

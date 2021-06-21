@@ -3,7 +3,7 @@ import Dependencies._
 ThisBuild / organizationName := "Rivergnom"
 ThisBuild / organization     := "com.rivergnom.common"
 ThisBuild / scalaVersion     := "2.13.5"
-scalacOptions in ThisBuild   ++= Seq("-unchecked", "-deprecation")
+scalacOptions in ThisBuild   ++= Seq("-unchecked", "-deprecation", "-Ymacro-annotations")
 enablePlugins(PackPlugin)
 
 lazy val bank = (project in file("bank"))
@@ -31,6 +31,12 @@ lazy val scheduler = (project in file("scheduler"))
   )
   .dependsOn(core, util)
 
+lazy val webSocket = (project in file("websocket"))
+  .settings(
+    name := "websocket"
+  )
+  .dependsOn(core, util)
+
 lazy val common = (project in file("."))
   .settings(
     name := "common",
@@ -50,13 +56,13 @@ lazy val util = (project in file("util"))
     libraryDependencies ++= logging,
     libraryDependencies ++= Seq(playJson, playJsonExt),
     libraryDependencies ++= Seq(akkaSlf4j, akkaActor, akkaStream, akkaHttp),
-    libraryDependencies ++= Seq(zio, zioLogging, zioLoggingSlf4j),
+    libraryDependencies ++= Seq(zio, zioLogging, zioLoggingSlf4j, zioMacros),
     libraryDependencies ++= Seq(shapeless, cats, tagging),
     libraryDependencies ++= Seq(xml),
-    libraryDependencies ++= circe :+ circeGenericExtras,
+    libraryDependencies ++= circe ++ Seq(circeGenericExtras, circeDerivation),
     libraryDependencies += phoneNumber,
     libraryDependencies += enumeratum,
-    libraryDependencies ++= Seq(sttp3BackendZio, sttpModel, asyncHttpClient),
+    libraryDependencies ++= Seq(sttp3BackendZio, sttpModel, asyncHttpClient, sttp3AsyncBackendZio),
     libraryDependencies ++= monocle,
     libraryDependencies ++= zioTest,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")

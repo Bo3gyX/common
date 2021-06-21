@@ -1,4 +1,3 @@
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object Dependencies {
@@ -11,36 +10,38 @@ object Dependencies {
   lazy val playJsonExt = "ai.x"              %% "play-json-extensions" % "0.42.0"
 
   lazy val circe = {
-    val version = "0.12.3"
+    val version = "0.13.0"
     Seq(
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic",
       "io.circe" %% "circe-parser"
     ).map(_ % version)
   }
-  lazy val circeGenericExtras = "io.circe" %% "circe-generic-extras" % "0.12.2"
+
+  lazy val circeDerivation = "io.circe" %% "circe-derivation" % "0.13.0-M5"
+  lazy val circeGenericExtras = "io.circe" %% "circe-generic-extras" % "0.13.0"
 
   lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.8"
 
-  lazy val akkaActor  = "com.typesafe.akka" %% "akka-actor"  % "2.6.3"
-  lazy val akkaSlf4j  = "com.typesafe.akka" %% "akka-slf4j"  % "2.6.3"
-  lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % "2.6.3"
-  lazy val akkaHttp   = "com.typesafe.akka" %% "akka-http"   % "10.2.2"
+  lazy val akkaActor  = "com.typesafe.akka" %% "akka-actor"  % "2.6.14"
+  lazy val akkaSlf4j  = "com.typesafe.akka" %% "akka-slf4j"  % "2.6.14"
+  lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % "2.6.14"
+  lazy val akkaHttp   = "com.typesafe.akka" %% "akka-http"   % "10.2.4"
 
   //todo то что хочется понять и научится юзать
   lazy val shapeless = "com.chuusai"   %% "shapeless" % "2.3.3"
   lazy val cats      = "org.typelevel" %% "cats-core" % "2.1.0"
-  lazy val zio       = "dev.zio"       %% "zio"       % "1.0.3"
 
-//  lazy val zioTest = "dev.zio" %% "zio-test"     % "1.0.3"
-//  lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "1.0.3"
-  //"dev.zio" %% "zio-test-magnolia" % "1.0.3" % "test" // optional
+  lazy val zioVersion = "1.0.5"
+  lazy val zio        = "dev.zio" %% "zio" % zioVersion
+
   lazy val zioTest = Seq(
-    "dev.zio" %% "zio-test"          % "1.0.3" % "test",
-    "dev.zio" %% "zio-test-sbt"      % "1.0.3" % "test",
-    "dev.zio" %% "zio-test-magnolia" % "1.0.3" % "test" // optional
+    "dev.zio" %% "zio-test"          % zioVersion % "test",
+    "dev.zio" %% "zio-test-sbt"      % zioVersion % "test",
+    "dev.zio" %% "zio-test-magnolia" % zioVersion % "test"
   )
 
+  lazy val zioMacros       = "dev.zio"                 %% "zio-macros"        % zioVersion
   lazy val zioLogging      = "dev.zio"                 %% "zio-logging"       % "0.5.4"
   lazy val zioLoggingSlf4j = "dev.zio"                 %% "zio-logging-slf4j" % "0.5.4"
   lazy val tagging         = "com.softwaremill.common" %% "tagging"           % "2.2.1"
@@ -59,6 +60,8 @@ object Dependencies {
   lazy val sttp3BackendZio = "com.softwaremill.sttp.client3" %% "httpclient-backend-zio" % "3.0.0-RC11"
   lazy val sttpModel       = "com.softwaremill.sttp.model"   %% "core"                   % "1.2.0-RC8"
   lazy val asyncHttpClient = "org.asynchttpclient"           % "async-http-client"       % "2.12.1"
+
+  lazy val sttp3AsyncBackendZio = "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % "3.3.5"
 
   lazy val monocle = Seq(
     "com.github.julien-truffaut" %% "monocle-core"  % "2.0.3",
