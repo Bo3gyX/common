@@ -12,19 +12,6 @@ lazy val bank = (project in file("bank"))
   )
   .dependsOn(core, util)
 
-lazy val panoramas = (project in file("panoramas"))
-  .settings(
-    name                := "panoramas",
-    libraryDependencies ++= images
-  )
-  .dependsOn(util, proto)
-
-lazy val dictionary = (project in file("dictionary"))
-  .settings(
-    name := "dictionary"
-  )
-  .dependsOn(core, util)
-
 lazy val scheduler = (project in file("scheduler"))
   .settings(
     name := "scheduler"
@@ -54,6 +41,7 @@ lazy val util = (project in file("util"))
   .settings(
     name                := "util",
     libraryDependencies ++= logging,
+    libraryDependencies += config,
     libraryDependencies ++= Seq(playJson, playJsonExt),
     libraryDependencies ++= Seq(akkaSlf4j, akkaActor, akkaStream, akkaHttp),
     libraryDependencies ++= Seq(zio, zioLogging, zioLoggingSlf4j, zioMacros),

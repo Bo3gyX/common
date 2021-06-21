@@ -1,5 +1,0 @@
-package panoramas
-
-class Converter {
-
-}
