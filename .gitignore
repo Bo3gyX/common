@@ -1,3 +1,4 @@
+*.local.conf
 *.class
 *.log
 *.iml
@@ -19,15 +20,10 @@ project/plugins/project/
 .worksheet
 .idea
 .bloop
-
 .metals
 .vscode
-
 upload.properties
 swagger.json
-
 data
-
 scripts/mainframer.sh
-
 /.mainframer
