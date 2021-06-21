@@ -6,7 +6,7 @@ object Dependencies {
   lazy val logstash = "net.logstash.logback" % "logstash-logback-encoder" % "6.5"
   lazy val logging  = Seq(slf4j, logback, logstash)
 
-  lazy val config = "com.typesafe" % "config" % "1.4.1"
+  lazy val typesafeConfig = "com.typesafe" % "config" % "1.4.1"
 
   lazy val playJson    = "com.typesafe.play" %% "play-json"            % "2.8.1"
   lazy val playJsonExt = "ai.x"              %% "play-json-extensions" % "0.42.0"
