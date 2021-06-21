@@ -1,4 +1,5 @@
 *.local.conf
+
 *.class
 *.log
 *.iml
