@@ -38,17 +38,23 @@ object DiscordProcessor {
 
     override def send(context: DiscordContext): RIO[AppEnv, Unit] =
       for {
-        f <- out.take
-        raw = f(context)
-        json <- Task(raw.asJson.deepDropNullValues)
-        _    <- ws.sendText(json.noSpaces)
-        _    <- log.info(s"send: ${json.spaces2}")
+        msgs <- out.takeUpTo(1)
+        _ <- ZIO.foreach_(msgs) { f =>
+          for {
+            raw  <- RIO(f(context))
+            json <- Task(raw.asJson.deepDropNullValues)
+            _    <- ws.sendText(json.noSpaces)
+            _    <- log.info(s"send: ${json.spaces2}")
+          } yield ()
+        }
       } yield ()
 
     override def updateContext(context: DiscordContext): RawMessage => RIO[AppEnv, DiscordContext] = { msg =>
       for {
+        _   <- log.info(s"update context: $context")
         s   <- RIO.succeed(msg.s.getOrElse(context.s))
         ctx <- RIO.succeed(context.copy(s = s))
+        _   <- log.info(s"new context: $ctx")
       } yield ctx
     }
 

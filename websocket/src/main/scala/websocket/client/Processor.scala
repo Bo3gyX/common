@@ -1,5 +1,6 @@
 package websocket.client
 
+import zio.logging.{log, Logging}
 import zio.{RIO, Ref}
 
 object Processor {
@@ -14,7 +15,7 @@ object Processor {
     def updateContext(context: C): M => RIO[R, C]
     def handler(context: C): M => RIO[R, Unit]
 
-    def run(context: C): RIO[R, Unit] = {
+    def run(context: C): RIO[R with Logging, Unit] = {
       for {
         _      <- init
         refCtx <- Ref.make(context)
@@ -34,7 +35,7 @@ object Processor {
         _           <- handler(newContext)(msg)
       } yield ()
 
-    private def produce(refCtx: Ref[C]): RIO[R, Unit] =
+    private def produce(refCtx: Ref[C]): RIO[R with Logging, Unit] =
       for {
         ctx <- refCtx.get
         _   <- send(ctx)
