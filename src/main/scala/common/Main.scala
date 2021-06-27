@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
 import com.typesafe.config.ConfigFactory
 object Main extends AkkaApp("Common") {
 
-  val config = ConfigFactory.load
-  println(config)
+
+
 
 }

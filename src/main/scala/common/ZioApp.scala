@@ -1,22 +1,19 @@
 package common
 
+import common.zioapp.MyProcessor.MyContext
+import common.zioapp.Processor
+import common.zioapp.Processor.ProcessorService
 import util.zio.ZioRunner
 import zio.ZIO
-import zio.clock.Clock
 
 object ZioApp extends ZioRunner {
 
   override def start: ZIO[AppEnv, Any, Any] = {
-    for {
-      clock    <- ZIO.service[Clock.Service]
-      instant1 <- clock.instant
-      instant2 <- clock.instant
-      instant3 <- clock.instant
-    } yield {
-      println(instant1)
-      println(instant2)
-      println(instant3)
-    }
+    val program = for {
+      processor <- ZIO.service[ProcessorService]
+      _         <- processor.run(MyContext(0))
+    } yield ()
+    program.provideSomeLayer(Processor.live)
   }
 
 }
