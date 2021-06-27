@@ -3,7 +3,7 @@ package websocket.client
 import com.typesafe.config.{Config, ConfigFactory}
 import discord.Entities._
 import discord.messages.JsonConverter._
-import discord.{Entities, Message, Messages}
+import discord.{Entities, Communication, Messages}
 import io.circe.parser
 import io.circe.syntax.EncoderOps
 import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, sendR}
@@ -32,10 +32,10 @@ object DiscordClient extends ZioRunner {
     def convert(message: String) =
       for {
         json <- ZIO.fromEither(parser.parse(message))
-        msg  <- ZIO.fromEither(json.as[Message])
+        msg  <- ZIO.fromEither(json.as[Communication])
       } yield msg
 
-    def process(message: Message): ENV[Unit] = message match {
+    def process(message: Communication): ENV[Unit] = message match {
       case Messages.Hello(payload) =>
         for {
           _ <- heartbeat(payload.heartbeatInterval)
@@ -45,7 +45,7 @@ object DiscordClient extends ZioRunner {
       case msg => log.info(s"process: $msg")
     }
 
-    def send(message: Message): ENV[Unit] = {
+    def send(message: Communication): ENV[Unit] = {
       for {
         _    <- log.info(s"send $message")
         json <- Task(message.asJson.deepDropNullValues.noSpaces)

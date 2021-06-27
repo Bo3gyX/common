@@ -138,10 +138,11 @@ object Entities {
   case class Ready(
       v: Int,
       user: Entities.User,
-      guilds: Seq[Json],
+      guilds: Seq[Json], //todo Json
       sessionId: String,
       shard: GuildShard,
-      application: Json)
+      application: Json //todo Json
+    )
 
   case class User(
       id: String,
@@ -158,22 +159,6 @@ object Entities {
       premiumType: Option[Int],
       publicFlags: Option[Int])
 
-  case class Message(
-      id: String,
-      channelId: String,
-      guildId: Option[String],
-      author: User,
-      member: Option[GuildMember],
-      content: String,
-      timestamp: Instant,
-      editedTimestamp: Instant,
-      tts: Boolean,
-      mentionEveryone: Boolean,
-      mentions: Seq[User],
-
-
-                    )
-
   case class GuildMember(
       user: Option[User],
       nick: Option[String],
@@ -186,9 +171,82 @@ object Entities {
       permissions: Option[String])
 
   case class Role(
-                   id: String,
-                   name: String,
-                   color: Int,
+      id: String,
+      name: String,
+      color: Int,
+      hoist: Boolean,
+      position: Int,
+      permissions: String,
+      managed: Boolean,
+      mentionable: Boolean,
+      tags: Option[RoleTags])
 
-                 )
+  case class RoleTags(botId: Option[String], integrationId: Option[String], premiumSubscriber: Option[Boolean])
+
+  case class ChannelMention(id: String, guildId: String, `type`: Int, name: String)
+
+  case class Attachment(
+      id: String,
+      filename: String,
+      contentType: Option[String],
+      size: Int, //integer	size of file in bytes
+      url: String,
+      proxyUrl: String,
+      height: Option[Int],
+      width: Option[Int])
+
+  case class Embed(
+      title: Option[String],
+      `type`: Option[EmbedType],
+      description: Option[String],
+      url: Option[String],
+      timestamp: Option[Instant],
+      color: Option[Int],
+      footer: Option[EmbedFooter],
+      image: Option[EmbedImage],
+      thumbnail: Option[EmbedThumbnail],
+      video: Option[EmbedVideo],
+      provider: Option[EmbedProvider],
+      author: Option[EmbedAuthor],
+      fields: Option[EmbedField])
+
+  sealed abstract class EmbedType(val value: String)
+
+  object EmbedType extends Enum[String, EmbedType] {
+    case object Rich    extends EmbedType("rich")
+    case object Image   extends EmbedType("image")
+    case object Video   extends EmbedType("video")
+    case object Gifv    extends EmbedType("gifv")
+    case object Article extends EmbedType("article")
+    case object Link    extends EmbedType("link")
+
+    override def values: Seq[EmbedType]                 = Seq(Rich, Image, Video, Gifv, Article, Link)
+    override def find(value: String): Option[EmbedType] = values.find(_.value == value)
+  }
+
+  case class EmbedFooter(text: String, iconUrl: Option[String], proxyIconUrl: Option[String])
+  case class EmbedImage(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int])
+  case class EmbedThumbnail(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int])
+  case class EmbedVideo(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int])
+  case class EmbedProvider(name: Option[String], url: Option[String])
+
+  case class EmbedAuthor(
+      name: Option[String],
+      url: Option[String],
+      iconUrl: Option[String],
+      proxyIconUrl: Option[String])
+
+  case class EmbedField(name: String, value: String, inline: Option[Boolean])
+
+  case class Reaction(count: Int, me: Boolean, emoji: Emoji)
+
+  case class Emoji(
+      id: Option[String],
+      name: Option[String],
+      roles: Seq[Role],
+      user: Option[User],
+      requireColons: Option[Boolean],
+      managed: Option[Boolean],
+      animated: Option[Boolean],
+      available: Option[Boolean])
 }

@@ -21,9 +21,9 @@ object DiscordProcessor {
     extends Service
     with discord.entities.JsonConverter {
 
-    private def push[M <: Message](msg: M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] = push(_ => msg)
+    private def push[M <: Communication](msg: M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] = push(_ => msg)
 
-    private def push[M <: Message](msg: DiscordContext => M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] =
+    private def push[M <: Communication](msg: DiscordContext => M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] =
       out.offer(ctx => RawMessage.toRaw(msg(ctx))(encoder)).unit
 
     override def init: RIO[AppEnv, Unit] = ZIO.unit
@@ -55,13 +55,13 @@ object DiscordProcessor {
     override def handler(context: DiscordContext): RawMessage => RIO[AppEnv, Unit] =
       raw => {
         val task = for {
-          msg <- RIO.fromEither(RawMessage.toMessage(raw))
+          msg <- RIO.fromEither(RawMessage.toCommunication(raw))
           _   <- pull(context)(msg)
         } yield ()
         task.ignore
       }
 
-    private def pull(context: DiscordContext): Message => RIO[AppEnv, Unit] = {
+    private def pull(context: DiscordContext): Communication => RIO[AppEnv, Unit] = {
       case Messages.Hello(payload) =>
         heartbeat(payload.heartbeatInterval) *> identify.delay(3.seconds)
       case Messages.HeartbeatAck => heartbeatAck

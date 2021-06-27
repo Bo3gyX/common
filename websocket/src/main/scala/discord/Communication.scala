@@ -1,6 +1,6 @@
 package discord
 
-trait Message {
+trait Communication {
   type Op <: Opcode
   type Payload
   def op: Op
@@ -9,15 +9,15 @@ trait Message {
   def t: Option[String]
 }
 
-object Message {
+object Communication {
 
-  abstract class Op[Op0 <: Opcode](val op: Op0) extends Message {
+  abstract class Op[Op0 <: Opcode](val op: Op0) extends Communication {
     override type Op = Op0
     override def s: Option[Int]    = None
     override def t: Option[String] = None
   }
 
-  trait Payload[T] { self: Message =>
+  trait Payload[T] { self: Communication =>
     override type Payload = T
     def payload: T
     override def d: Option[T] = Some(payload)
@@ -25,7 +25,7 @@ object Message {
 
   object Payload {
 
-    trait Empty extends { self: Message =>
+    trait Empty extends { self: Communication =>
       override type Payload = Nothing
       override def d: Option[Nothing] = None
     }

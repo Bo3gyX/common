@@ -28,7 +28,7 @@ object JsonConverter extends discord.entities.JsonConverter with JsonSupported {
 
   object RawMessage {
 
-    def toMessage(raw: RawMessage): Result[Message] = (raw.op, raw.d) match {
+    def toCommunication(raw: RawMessage): Result[Communication] = (raw.op, raw.d) match {
       case (Opcode.Hello, Some(json))     => json.as[Entities.Hello].map(Messages.Hello)
       case (Opcode.Heartbeat, Some(json)) => json.as[Int].map(Messages.Heartbeat)
       case (Opcode.HeartbeatAck, None)    => Right(Messages.HeartbeatAck)
@@ -36,26 +36,26 @@ object JsonConverter extends discord.entities.JsonConverter with JsonSupported {
       case x                              => Left(DecodingFailure(s"Unsupported message: $x", List.empty))
     }
 
-    def toRaw[M <: Message](message: M)(implicit encoder: Encoder[M#Payload]): RawMessage =
+    def toRaw[M <: Communication](message: M)(implicit encoder: Encoder[M#Payload]): RawMessage =
       RawMessage(message.op, message.d.map(encoder(_)), message.s, message.t)
   }
 
   implicit val encoderRawMessage: Encoder[RawMessage] = deriveEncoder[RawMessage](renaming.snakeCase)
   implicit val decoderRawMessage: Decoder[RawMessage] = deriveDecoder[RawMessage](renaming.snakeCase)
 
-  implicit val encodeMessage: Encoder[Message] = Encoder.instance {
+  implicit val encodeCommunication: Encoder[Communication] = Encoder.instance {
     case m: Messages.Hello     => toJson(m)
     case m: Messages.Heartbeat => toJson(m)
     case m: Messages.Identify  => toJson(m)
   }
 
-  implicit val decoderMessage: Decoder[Message] = new Decoder[Message] {
-    override def apply(c: HCursor): Result[Message] = c.as[RawMessage].flatMap(fromJson)
+  implicit val decoderCommunication: Decoder[Communication] = new Decoder[Communication] {
+    override def apply(c: HCursor): Result[Communication] = c.as[RawMessage].flatMap(fromJson)
   }
 
-  def toJson[M <: Message](message: M)(implicit encoder: Encoder[M#Payload]): Json =
+  def toJson[M <: Communication](message: M)(implicit encoder: Encoder[M#Payload]): Json =
     RawMessage.toRaw(message).asJson
 
-  def fromJson[P](raw: RawMessage): Result[Message] = RawMessage.toMessage(raw)
+  def fromJson[P](raw: RawMessage): Result[Communication] = RawMessage.toCommunication(raw)
 
 }
