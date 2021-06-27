@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Route
 import common.zioapp.AkkaActorSystem
 import common.zioapp.AkkaActorSystem.AkkaActorSystem
 import util.zio.ZioRunner
+import util.zio.ZioRunner.AppEnv
 import zio._
 import zio.logging.{log, Logging}
 
@@ -46,7 +47,7 @@ object ZHttpServer extends ZioRunner {
     }
   }
 
-  override def start: ZIO[ZHttpServer.AppEnv, Any, Any] = {
+  override def start: ZIO[AppEnv, Any, Any] = {
     val actorSystemLayer = ZLayer.requires[Logging] ++ AkkaActorSystem.Live("zio-http-service")
 
     val eff = for {

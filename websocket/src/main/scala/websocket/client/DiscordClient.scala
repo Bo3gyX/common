@@ -1,23 +1,27 @@
 package websocket.client
 
+import com.typesafe.config.{Config, ConfigFactory}
 import discord.Entities._
 import discord.messages.JsonConverter._
 import discord.{Entities, Message, Messages}
 import io.circe.parser
 import io.circe.syntax.EncoderOps
-import sttp.client3.asynchttpclient.zio.{sendR, AsyncHttpClientZioBackend}
-import sttp.client3.{asWebSocketAlways, basicRequest, UriContext}
+import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, sendR}
+import sttp.client3.{UriContext, asWebSocketAlways, basicRequest}
 import sttp.ws.WebSocket
 import util.zio.ZioRunner
+import util.zio.ZioRunner.AppEnv
 import zio.duration.durationInt
 import zio.logging.log
 import zio.{Schedule, Task, ZIO}
 
 object DiscordClient extends ZioRunner {
 
-  val version = 9
-  val token   = "NTIyNTQ4NTAwMTczNTUzNjY1.XBGTNg.hlOR_mV65P6v4ZXqWgyoRzrO-0I"
-  val url     = "wss://gateway.discord.gg"
+  val conf: Config = ConfigFactory.load
+
+  val version = conf.getString("websocket.discord.version")
+  val token   = conf.getString("websocket.discord.token")
+  val url     = conf.getString("websocket.discord.url")
 
   type ENV[R]  = ZIO[AppEnv, Throwable, R]
   type WS      = WebSocket[ENV]
@@ -52,12 +56,10 @@ object DiscordClient extends ZioRunner {
     def identify = {
       val properties: Properties = Properties("ios", "twg bot", "mac book pro")
       val presence = PresenceUpdate(
-        None,
+        StatusType.Online,
         Seq(
           Activity("Watching for you", ActivityType.Watching)
-        ),
-        StatusType.Online,
-        false
+        )
       )
 
       val intents: Intent =

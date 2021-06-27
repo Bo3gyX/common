@@ -1,13 +1,12 @@
 package util.zio
 
+import util.zio.ZioRunner.AppEnv
 import zio._
 import zio.duration.durationInt
 import zio.logging.slf4j._
 import zio.logging.{LogAnnotation, Logging, log}
 
 trait ZioRunner extends App {
-
-  type AppEnv = ZEnv with Logging
 
   def start: ZIO[AppEnv, Any, Any]
 
@@ -57,4 +56,8 @@ trait ZioRunner extends App {
     }
   }
 
+}
+
+object ZioRunner {
+  type AppEnv = ZEnv with Logging
 }

@@ -1,6 +1,7 @@
 package common.zioapp
 
 import util.zio.ZioRunner
+import util.zio.ZioRunner.AppEnv
 import zio.macros.accessible
 import zio.{Has, Task, ULayer, URLayer, ZIO, ZLayer}
 
@@ -52,7 +53,7 @@ object ExampleProgramApp extends ZioRunner {
   val layer: ULayer[Has[MainProgram.Service]] =
     Echo.live >>> MainProgram.live
 
-  override def start: ZIO[ExampleProgramApp.AppEnv, Any, Any] = {
+  override def start: ZIO[AppEnv, Any, Any] = {
     val t = MainProgram.testEcho("test")
     val r = t.provideCustomLayer(layer)
     r

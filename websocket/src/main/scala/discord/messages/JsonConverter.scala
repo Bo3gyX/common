@@ -5,6 +5,7 @@ import io.circe.Decoder.Result
 import io.circe._
 import io.circe.derivation.{deriveDecoder, deriveEncoder, renaming}
 import io.circe.syntax.EncoderOps
+import websocket.client.WsProcessor.WsMessage
 
 import scala.language.implicitConversions
 
@@ -23,7 +24,22 @@ object JsonConverter extends discord.entities.JsonConverter with JsonSupported {
       } yield res
   }
 
-  case class RawMessage(op: Opcode, d: Option[Json], s: Option[Int], t: Option[String])
+  case class RawMessage(op: Opcode, d: Option[Json], s: Option[Int], t: Option[String]) extends WsMessage
+
+  object RawMessage {
+
+    def toMessage(raw: RawMessage): Result[Message] = (raw.op, raw.d) match {
+      case (Opcode.Hello, Some(json))     => json.as[Entities.Hello].map(Messages.Hello)
+      case (Opcode.Heartbeat, Some(json)) => json.as[Int].map(Messages.Heartbeat)
+      case (Opcode.HeartbeatAck, None)    => Right(Messages.HeartbeatAck)
+      case (Opcode.Identify, Some(json))  => json.as[Entities.Identify].map(Messages.Identify)
+      case x                              => Left(DecodingFailure(s"Unsupported message: $x", List.empty))
+    }
+
+    def toRaw[M <: Message](message: M)(implicit encoder: Encoder[M#Payload]): RawMessage =
+      RawMessage(message.op, message.d.map(encoder(_)), message.s, message.t)
+  }
+
   implicit val encoderRawMessage: Encoder[RawMessage] = deriveEncoder[RawMessage](renaming.snakeCase)
   implicit val decoderRawMessage: Decoder[RawMessage] = deriveDecoder[RawMessage](renaming.snakeCase)
 
@@ -37,21 +53,9 @@ object JsonConverter extends discord.entities.JsonConverter with JsonSupported {
     override def apply(c: HCursor): Result[Message] = c.as[RawMessage].flatMap(fromJson)
   }
 
-  def toJson(message: Message)(implicit encoder: Encoder[message.Payload]): Json =
-    RawMessage(message.op, message.d.map(encoder(_)), message.s, message.t).asJson
+  def toJson[M <: Message](message: M)(implicit encoder: Encoder[M#Payload]): Json =
+    RawMessage.toRaw(message).asJson
 
-  def fromJson[P](raw: RawMessage): Result[Message] = {
-    raw match {
-      case RawMessage(Opcode.Hello, Some(json), _, _) =>
-        json.as[Entities.Hello].map(Messages.Hello)
-      case RawMessage(Opcode.Heartbeat, Some(json), _, _) =>
-        json.as[Int].map(Messages.Heartbeat)
-      case RawMessage(Opcode.HeartbeatAck, None, _, _) =>
-        Right(Messages.HeartbeatAck)
-      case RawMessage(Opcode.Identify, Some(json), _, _) =>
-        json.as[Entities.Identify].map(Messages.Identify)
-
-    }
-  }
+  def fromJson[P](raw: RawMessage): Result[Message] = RawMessage.toMessage(raw)
 
 }

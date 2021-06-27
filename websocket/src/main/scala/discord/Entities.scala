@@ -2,6 +2,7 @@ package discord
 
 import io.circe.Json
 
+import java.time.Instant
 import scala.annotation.tailrec
 
 object Entities {
@@ -19,7 +20,12 @@ object Entities {
 
   case class Properties(os: String, browser: String, device: String)
   case class GuildShard(id: Int, num: Int)
-  case class PresenceUpdate(since: Option[Long], activities: Seq[Activity], status: StatusType, afk: Boolean)
+
+  case class PresenceUpdate(
+      status: StatusType,
+      activities: Seq[Activity] = Seq.empty,
+      afk: Boolean = false,
+      since: Option[Long] = None)
 
   case class Activity(name: String, typeActivity: ActivityType)
 
@@ -152,4 +158,37 @@ object Entities {
       premiumType: Option[Int],
       publicFlags: Option[Int])
 
+  case class Message(
+      id: String,
+      channelId: String,
+      guildId: Option[String],
+      author: User,
+      member: Option[GuildMember],
+      content: String,
+      timestamp: Instant,
+      editedTimestamp: Instant,
+      tts: Boolean,
+      mentionEveryone: Boolean,
+      mentions: Seq[User],
+
+
+                    )
+
+  case class GuildMember(
+      user: Option[User],
+      nick: Option[String],
+      roles: Seq[String],
+      joinedAt: Instant,
+      premium_since: Option[Instant],
+      deaf: Boolean,
+      mute: Boolean,
+      pending: Option[Boolean],
+      permissions: Option[String])
+
+  case class Role(
+                   id: String,
+                   name: String,
+                   color: Int,
+
+                 )
 }
