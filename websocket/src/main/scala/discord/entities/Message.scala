@@ -14,15 +14,15 @@ case class Message(
     member: Option[GuildMember],
     content: String,
     timestamp: Instant,
-    editedTimestamp: Instant,
+    editedTimestamp: Option[Instant],
     tts: Boolean,
     mentionEveryone: Boolean,
     mentions: Seq[User],
     mentionRoles: Seq[Role],
-    mentionChannels: Seq[ChannelMention],
+    mentionChannels: Option[Seq[ChannelMention]],
     attachments: Seq[Attachment],
     embeds: Seq[Embed],
-    reactions: Seq[Reaction],
+    reactions: Option[Seq[Reaction]],
     nonce: Option[String],
     pinned: Boolean,
     webhookId: Option[String],
@@ -32,7 +32,7 @@ case class Message(
     applicationId: Option[String],
     messageReference: Option[MessageReference],
     flags: Option[Int],
-    stickers: Seq[Json], //todo Json
+    stickers: Option[Seq[Json]], //todo Json
     referencedMessage: Option[Message],
     interaction: Option[Json], //todo Json
     thread: Option[Json], //todo Json

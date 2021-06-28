@@ -16,7 +16,7 @@ object GatewaysMessages {
     extends GatewaysMessage.Op(Opcode.Identify)
     with GatewaysMessage.Payload[entities.Identify]
 
-  case class MessageEvent(payload: entities.Message)
+  case class Message(payload: entities.Message)
     extends GatewaysMessage.Op(Opcode.Event)
     with GatewaysMessage.Payload[entities.Message]
 

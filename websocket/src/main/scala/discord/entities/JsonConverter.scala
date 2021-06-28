@@ -10,7 +10,17 @@ import io.circe._
 import io.circe.derivation.{deriveDecoder, deriveEncoder, renaming}
 import io.circe.syntax.EncoderOps
 
+import java.time.Instant
+
 trait JsonConverter extends JsonSupported {
+
+  implicit val encodeInstant: Encoder[Instant] = new Encoder[Instant] {
+    override def apply(a: Instant): Json = Json.fromString(a.toString)
+  }
+
+  implicit val decoderInstant: Decoder[Instant] = new Decoder[Instant] {
+    override def apply(c: HCursor): Result[Instant] = c.as[String].map(Instant.parse)
+  }
 
   implicit val encoderHello: Encoder[Hello] = deriveEncoder[Hello](renaming.snakeCase)
   implicit val decoderHello: Decoder[Hello] = deriveDecoder[Hello](renaming.snakeCase)

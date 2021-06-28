@@ -2,10 +2,10 @@ package discord
 
 import discord.entities.Activity.ActivityType
 import discord.entities._
-import discord.messages.{GatewaysMessage, GatewaysMessages}
-import discord.messages.JsonConverter.{RawMessage, _}
+import discord.messages.RawMessage.toRaw
+import discord.messages.{GatewaysMessage, GatewaysMessages, RawMessage}
 import io.circe.syntax.EncoderOps
-import io.circe.{parser, Encoder}
+import io.circe.{parser, DecodingFailure, Encoder, Error}
 import util.zio.ZioRunner.AppEnv
 import websocket.client.WsProcessor
 import websocket.client.WsProcessor.WS
@@ -26,12 +26,13 @@ object DiscordProcessor {
       state: Ref[DiscordState],
       out: Queue[DiscordState => RawMessage]
     )(val ws: WS)
-    extends Service {
+    extends Service
+    with messages.JsonConverter {
 
     private def push[M <: GatewaysMessage](msg: M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] = push(_ => msg)
 
     private def push[M <: GatewaysMessage](msg: DiscordState => M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] =
-      out.offer(ctx => RawMessage.toRaw(msg(ctx))(encoder)).unit
+      out.offer(ctx => toRaw(msg(ctx))(encoder)).unit
 
     override def init: RIO[AppEnv, Unit] = ZIO.unit
 
@@ -58,16 +59,20 @@ object DiscordProcessor {
     override def handler: RawMessage => RIO[AppEnv, Unit] =
       raw => {
         val task = for {
-          msg <- RIO.fromEither(RawMessage.toCommunication(raw))
+          msg <- RIO.fromEither(RawMessage.toGatewaysMessage(raw))
+          _   <- log.info(s"pull: $msg")
           _   <- pull(msg)
         } yield ()
-        task.ignore
+        task.catchSome {
+          case e: Error => log.throwable("handler error", e)
+        }.ignore
       }
 
     private def pull: GatewaysMessage => RIO[AppEnv, Unit] = {
-      case GatewaysMessages.Hello(payload) => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
-      case GatewaysMessages.HeartbeatAck   => heartbeatAck
-      case msg                             => log.info(s"Undefined msg: $msg")
+      case GatewaysMessages.Hello(payload)   => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
+      case GatewaysMessages.HeartbeatAck     => heartbeatAck
+      case GatewaysMessages.Message(payload) => log.info(s"message from ${payload.author.username}: ${payload.content}")
+      case msg                               => log.warn(s"Undefined msg: $msg")
     }
 
     def heartbeat(interval: Int): RIO[AppEnv, Unit] = {

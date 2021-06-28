@@ -8,9 +8,6 @@ import scala.reflect.ClassTag
 
 trait JsonSupported {
 
-//  def deriveEncoder[A]: Encoder.AsObject[A] = deriveEncoder[A](renaming.snakeCase)
-//  def deriveDecoder[A]: Decoder[A]          = deriveDecoder[A](renaming.snakeCase)
-
   def fromValid[V](c: HCursor, valid: Validated[Throwable, V]): Decoder.Result[V] =
     valid.leftMap(DecodingFailure.fromThrowable(_, c.history)).toEither
 }
