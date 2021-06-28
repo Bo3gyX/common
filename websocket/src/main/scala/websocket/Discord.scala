@@ -2,9 +2,9 @@ package websocket
 
 import com.typesafe.config.{Config, ConfigFactory}
 import discord.DiscordProcessor
-import discord.DiscordProcessor.DiscordContext
-import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient, sendR}
-import sttp.client3.{Response, UriContext, asWebSocketAlways, basicRequest}
+import discord.DiscordProcessor.DiscordState
+import sttp.client3.asynchttpclient.zio.{sendR, AsyncHttpClientZioBackend, SttpClient}
+import sttp.client3.{asWebSocketAlways, basicRequest, Response, UriContext}
 import util.zio.ZioRunner
 import util.zio.ZioRunner.AppEnv
 import websocket.client.WsProcessor.{ENV, WS}
@@ -37,20 +37,14 @@ object Discord extends ZioRunner {
   } yield connect
 
   private def connect(processor: WS => DiscordProcessor.Service): RIO[SttpClient with AppEnv, Response[Unit]] = {
-
-    val context = DiscordContext(0)
-
     val uri = uri"${discordConfig.url}"
       .addParam("v", discordConfig.version.toString)
       .addParam("encoding", "json")
-
     val request = basicRequest
       .header("Origin", "discord")
       .get(uri)
-      .response(asWebSocketAlways[ENV, Unit](ws => processor(ws).run(context)))
-
+      .response(asWebSocketAlways[ENV, Unit](ws => processor(ws).run))
     println(request.toCurl)
-
     sendR(request)
   }
 

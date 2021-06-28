@@ -1,44 +1,38 @@
 package websocket.client
 
-import zio.logging.{log, Logging}
-import zio.{RIO, Ref}
+import zio.RIO
+import zio.logging.Logging
 
 object Processor {
 
   trait Message
   trait Context
 
-  trait Service[R, C <: Context, M <: Message] {
+  trait Service[R, M <: Message] {
     def init: RIO[R, Unit]
     def receive: RIO[R, M]
-    def send(context: C): RIO[R, Unit]
-    def updateContext(context: C): M => RIO[R, C]
-    def handler(context: C): M => RIO[R, Unit]
+    def send: RIO[R, Unit]
+    def handler: M => RIO[R, Unit]
 
-    def run(context: C): RIO[R with Logging, Unit] = {
+    def run: RIO[R with Logging, Unit] = {
       for {
-        _      <- init
-        refCtx <- Ref.make(context)
-        f1     <- consume(refCtx).forever.fork
-        f2     <- produce(refCtx).forever.fork
-        _      <- f1.join
-        _      <- f2.join
+        _  <- init
+        f1 <- consume.forever.fork
+        f2 <- produce.forever.fork
+        _  <- f1.join
+        _  <- f2.join
       } yield ()
     }
 
-    private def consume(refCtx: Ref[C]): RIO[R, Unit] =
+    private def consume: RIO[R, Unit] =
       for {
-        msg         <- receive
-        currContext <- refCtx.get
-        newContext  <- updateContext(currContext)(msg)
-        _           <- refCtx.set(newContext)
-        _           <- handler(newContext)(msg)
+        msg <- receive
+        _   <- handler(msg)
       } yield ()
 
-    private def produce(refCtx: Ref[C]): RIO[R with Logging, Unit] =
+    private def produce: RIO[R with Logging, Unit] =
       for {
-        ctx <- refCtx.get
-        _   <- send(ctx)
+        _ <- send
       } yield ()
   }
 

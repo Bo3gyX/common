@@ -1,6 +1,5 @@
 package discord.entities
 
-import discord.Entities._
 import discord.Enum
 import discord.entities.Message._
 import io.circe.Json

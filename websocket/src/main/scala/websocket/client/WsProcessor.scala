@@ -10,9 +10,8 @@ object WsProcessor {
   type WS     = WebSocket[ENV]
 
   trait WsMessage extends Processor.Message
-  trait WsContext extends Processor.Context
 
-  trait Service[C <: WsContext, M <: WsMessage] extends Processor.Service[AppEnv, C, M] {
+  trait Service[M <: WsMessage] extends Processor.Service[AppEnv, M] {
     def ws: WS
   }
 

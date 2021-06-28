@@ -1,8 +1,10 @@
 package discord.entities
 
-import discord.Entities._
 import discord.JsonSupported
+import discord.entities.Activity.ActivityType
+import discord.entities.Embed.{EmbedAuthor, EmbedField, EmbedFooter, EmbedImage, EmbedProvider, EmbedThumbnail, EmbedType, EmbedVideo}
 import discord.entities.Message.{MessageActivity, MessageActivityType, MessageReference, MessageType}
+import discord.entities.Role.RoleTags
 import io.circe.Decoder.Result
 import io.circe._
 import io.circe.derivation.{deriveDecoder, deriveEncoder, renaming}

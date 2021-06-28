@@ -1,82 +1,78 @@
 package discord
 
-import discord.Entities._
-import discord.messages.JsonConverter.RawMessage
+import discord.entities.Activity.ActivityType
+import discord.entities._
+import discord.messages.{GatewaysMessage, GatewaysMessages}
+import discord.messages.JsonConverter.{RawMessage, _}
 import io.circe.syntax.EncoderOps
-import io.circe.{parser, DecodingFailure, Encoder}
+import io.circe.{parser, Encoder}
 import util.zio.ZioRunner.AppEnv
 import websocket.client.WsProcessor
-import websocket.client.WsProcessor.{WS, WsContext}
+import websocket.client.WsProcessor.WS
 import zio.duration.durationInt
 import zio.logging.log
-import zio.{Has, Queue, RIO, Schedule, Task, UIO, ULayer, ZIO, ZManaged}
+import zio.{Has, Queue, RIO, Ref, Schedule, Task, UIO, ULayer, ZIO, ZManaged}
 
 object DiscordProcessor {
 
-  case class DiscordContext(s: Int) extends WsContext
+  case class DiscordState(seqNumber: Int)
 
-  trait Service extends WsProcessor.Service[DiscordContext, RawMessage]
+  trait Service extends WsProcessor.Service[RawMessage] {
+    def token: String
+  }
 
-  class DiscordProcessorImpl(token: String, out: Queue[DiscordContext => RawMessage])(val ws: WS)
-    extends Service
-    with discord.entities.JsonConverter {
+  class DiscordProcessorImpl(
+      val token: String,
+      state: Ref[DiscordState],
+      out: Queue[DiscordState => RawMessage]
+    )(val ws: WS)
+    extends Service {
 
-    private def push[M <: Communication](msg: M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] = push(_ => msg)
+    private def push[M <: GatewaysMessage](msg: M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] = push(_ => msg)
 
-    private def push[M <: Communication](msg: DiscordContext => M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] =
+    private def push[M <: GatewaysMessage](msg: DiscordState => M)(implicit encoder: Encoder[M#Payload]): UIO[Unit] =
       out.offer(ctx => RawMessage.toRaw(msg(ctx))(encoder)).unit
 
     override def init: RIO[AppEnv, Unit] = ZIO.unit
 
     override def receive: RIO[AppEnv, RawMessage] =
       for {
-        json <- ws.receiveText()
-        _    <- log.info(s"receive: $json")
-        raw  <- RIO.fromEither(parser.parse(json).flatMap(_.as[RawMessage]))
-        _    <- log.info(s"parsed as: $raw")
+        json  <- ws.receiveText()
+        _     <- log.info(s"receive: $json")
+        raw   <- RIO.fromEither(parser.parse(json).flatMap(_.as[RawMessage]))
+        _     <- log.info(s"parsed as: $raw")
+        state <- state.updateAndGet(state => raw.s.map(s => state.copy(seqNumber = s)).getOrElse(state))
+        _     <- log.info(s"update state to $state")
       } yield raw
 
-    override def send(context: DiscordContext): RIO[AppEnv, Unit] =
+    override def send: RIO[AppEnv, Unit] =
       for {
-        msgs <- out.takeUpTo(1)
-        _ <- ZIO.foreach_(msgs) { f =>
-          for {
-            raw  <- RIO(f(context))
-            json <- Task(raw.asJson.deepDropNullValues)
-            _    <- ws.sendText(json.noSpaces)
-            _    <- log.info(s"send: ${json.spaces2}")
-          } yield ()
-        }
+        f     <- out.take
+        state <- state.get
+        raw   <- Task(f(state))
+        json  <- Task(raw.asJson.deepDropNullValues)
+        _     <- ws.sendText(json.noSpaces)
+        _     <- log.info(s"send: ${json.spaces2}")
       } yield ()
 
-    override def updateContext(context: DiscordContext): RawMessage => RIO[AppEnv, DiscordContext] = { msg =>
-      for {
-        _   <- log.info(s"update context: $context")
-        s   <- RIO.succeed(msg.s.getOrElse(context.s))
-        ctx <- RIO.succeed(context.copy(s = s))
-        _   <- log.info(s"new context: $ctx")
-      } yield ctx
-    }
-
-    override def handler(context: DiscordContext): RawMessage => RIO[AppEnv, Unit] =
+    override def handler: RawMessage => RIO[AppEnv, Unit] =
       raw => {
         val task = for {
           msg <- RIO.fromEither(RawMessage.toCommunication(raw))
-          _   <- pull(context)(msg)
+          _   <- pull(msg)
         } yield ()
         task.ignore
       }
 
-    private def pull(context: DiscordContext): Communication => RIO[AppEnv, Unit] = {
-      case Messages.Hello(payload) =>
-        heartbeat(payload.heartbeatInterval) *> identify.delay(3.seconds)
-      case Messages.HeartbeatAck => heartbeatAck
-      case msg                   => log.info(s"Undefined msg: $msg")
+    private def pull: GatewaysMessage => RIO[AppEnv, Unit] = {
+      case GatewaysMessages.Hello(payload) => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
+      case GatewaysMessages.HeartbeatAck   => heartbeatAck
+      case msg                             => log.info(s"Undefined msg: $msg")
     }
 
     def heartbeat(interval: Int): RIO[AppEnv, Unit] = {
       val task = for {
-        - <- push(ctx => Messages.Heartbeat(ctx.s))
+        - <- push(ctx => GatewaysMessages.Heartbeat(ctx.seqNumber))
       } yield ()
       log.info(s"heartbeat $interval") *> task
         .repeat(Schedule.spaced(interval.millis))
@@ -99,21 +95,19 @@ object DiscordProcessor {
             Activity("Watching for you", ActivityType.Watching)
           )
         )
-        intents: Intent = Intent.GUILDS |
-          Intent.GUILD_MESSAGES |
-          Intent.GUILD_MESSAGE_REACTIONS |
-          Intent.GUILD_MESSAGE_TYPING
+        intents: Intent = Intent.GUILD_MESSAGES
 
-        identify = Entities.Identify(token, properties, intents, presence = Some(presence))
-        _ <- push(Messages.Identify(identify))
+        identify = entities.Identify(token, properties, intents, presence = Some(presence))
+        _ <- push(GatewaysMessages.Identify(identify))
       } yield ()
   }
 
   def live(token: String): ULayer[Has[WS => Service]] =
     ZManaged.fromEffect {
       for {
-        out <- Queue.unbounded[DiscordContext => RawMessage]
-        processor = (ws: WS) => new DiscordProcessorImpl(token, out)(ws)
+        state <- Ref.make(DiscordState(0))
+        out   <- Queue.unbounded[DiscordState => RawMessage]
+        processor = (ws: WS) => new DiscordProcessorImpl(token, state, out)(ws)
       } yield processor
     }.toLayer
 }
