@@ -2,17 +2,30 @@ package common
 
 import _root_.util.AkkaApp
 import io.circe.Decoder.{decodeOption, Result}
+import io.circe._
 import io.circe.derivation.{deriveCodec, renaming}
 import io.circe.syntax.EncoderOps
-import io.circe._
 
 object Main extends AkkaApp("Common") {
 
-  case class Payload[T](op: Int, d: Option[T], s: Option[Int], t: Option[String])
+  case class Payload[T](opcode: Operation.Code, data: Option[T], s: Option[Int], event: Event.Name)
 
   object Payload {
-    case class Id[O, E](opcode: Operation.Code[O], event: Event.Name[E])
+    case class Id(opcode: Operation.Code, event: Event.Name)
 
+    def apply(opcode: Operation.Code): Payload[Nothing] =
+      Payload(opcode, None, None, Event.None)
+
+    def apply[T](opcode: Operation.Code, entity: T): Payload[T] =
+      Payload(opcode, Some(entity), None, Event.None)
+
+    def apply[T](event: Event.Name, entity: T): Payload[T] =
+      Payload(Operation.Dispatch, Some(entity), None, event)
+  }
+
+  trait Entity[T]
+
+  object Entity {
     case class Hello(heartbeatInterval: Int)
     case class Ready(sessionId: String)
   }
@@ -20,49 +33,76 @@ object Main extends AkkaApp("Common") {
   trait Operation
 
   object Operation {
-    sealed abstract class Code[+T](val value: Int)
+    sealed abstract class Code(val value: Int)
 
-    case object Dispatch     extends Code[Nothing](0)
-    case object Hello        extends Code[Payload.Hello](10)
-    case object Heartbeat    extends Code[Int](1)
-    case object HeartbeatAck extends Code[Nothing](11)
+    case object Dispatch     extends Code(0)
+    case object Hello        extends Code(10) with Entity[Entity.Hello]
+    case object Heartbeat    extends Code(1) with Entity[Int]
+    case object HeartbeatAck extends Code(11)
 
-    val values: Seq[Code[_]]                 = Seq(Dispatch, Hello, Heartbeat, HeartbeatAck)
-    def find[T](value: Int): Option[Code[T]] = values.find(_.value == value).map(_.asInstanceOf[Code[T]])
+    val values: Seq[Code]              = Seq(Dispatch, Hello, Heartbeat, HeartbeatAck)
+    def find(value: Int): Option[Code] = values.find(_.value == value)
   }
 
   trait Event
 
   object Event {
-    sealed abstract class Name[+T](val value: String)
+    sealed abstract class Name(val value: String)
 
-    case object None  extends Name[Nothing]("")
-    case object Ready extends Name[Payload.Ready]("READY")
+    case object None  extends Name("")
+    case object Ready extends Name("READY") with Entity[Entity.Ready]
 
-    val values: Seq[Name[_]]                    = Seq(None, Ready)
-    def find[T](value: String): Option[Name[T]] = values.find(_.value == value).map(_.asInstanceOf[Name[T]])
+    val values: Seq[Name]                 = Seq(None, Ready)
+    def find(value: String): Option[Name] = values.find(_.value == value)
   }
 
-  implicit val codecHello: Codec[Payload.Hello] = deriveCodec[Payload.Hello](renaming.snakeCase)
-  implicit val codecReady: Codec[Payload.Ready] = deriveCodec[Payload.Ready](renaming.snakeCase)
+  implicit val codecOperationCode: Codec[Operation.Code] = new Codec[Operation.Code] {
 
-  implicit def encoderPayload[T]: Encoder[Payload[T]] = new Encoder[Payload[T]] {
+    override def apply(c: HCursor): Result[Operation.Code] =
+      for {
+        value <- c.as[Int]
+        code  <- Operation.find(value).toRight(DecodingFailure(s"Undefined code $value", c.history))
+      } yield code
 
-    override def apply(a: Payload[T]): Json = {
-      val needOpcode = Operation.find[T](a.op).get
-      val needEvent  = a.t.flatMap(Event.find[T]).getOrElse(Event.None)
-      val id         = Payload.Id(needOpcode, needEvent)
-      val codec      = codecs(id)
+    override def apply(a: Operation.Code): Json = a.value.asJson
+  }
+
+  implicit val codeEventName: Codec[Event.Name] = new Codec[Event.Name] {
+
+    override def apply(c: HCursor): Result[Event.Name] =
+      for {
+        value <- c.as[Option[String]]
+        name <- value match {
+          case Some(v) => Event.find(v).toRight(DecodingFailure(s"Undefined name $v", c.history))
+          case None    => Right(Event.None)
+        }
+      } yield name
+
+    override def apply(a: Event.Name): Json =
+      (a match {
+        case Event.None => None
+        case name       => Some(name.value)
+      }).asJson
+  }
+
+  implicit val codecHello: Codec[Entity.Hello] = deriveCodec[Entity.Hello](renaming.snakeCase)
+  implicit val codecReady: Codec[Entity.Ready] = deriveCodec[Entity.Ready](renaming.snakeCase)
+
+  implicit def encoderPayload: Encoder[Payload[Any]] = new Encoder[Payload[Any]] {
+
+    override def apply(a: Payload[Any]): Json = {
+      val id    = Payload.Id(a.opcode, a.event)
+      val codec = codecs(id)
       val data = for {
-        c <- codec.map(_.asInstanceOf[Encoder[T]])
-        d <- a.d
+        c <- codec.map(_.asInstanceOf[Encoder[Any]])
+        d <- a.data
       } yield d.asJson(c)
 
       Json.obj(
-        "op" -> a.op.asJson,
+        "op" -> a.opcode.asJson,
         "d" -> data.asJson,
         "s" -> a.s.asJson,
-        "t" -> a.t.filter(_.nonEmpty).asJson
+        "t" -> a.event.asJson
       )
     }
   }
@@ -71,35 +111,33 @@ object Main extends AkkaApp("Common") {
 
     override def apply(c: HCursor): Result[Payload[Any]] = {
       for {
-        opcode <- c.downField("op").as[Int].map(Operation.find[Any](_).get)
-        event <- c.downField("t").as[Option[String]].map { opt =>
-          opt.flatMap(Event.find[Any]).getOrElse(Event.None)
-        }
+        opcode <- c.downField("op").as[Operation.Code]
+        event  <- c.downField("t").as[Event.Name]
         id      = Payload.Id(opcode, event)
         decoder = codecs(id).map(_.asInstanceOf[Decoder[Any]])
         data <- if (decoder.isEmpty) Right(None) else c.downField("d").as[Any](decoder.get).map(Option(_))
         seq  <- c.downField("s").as[Option[Int]]
-      } yield Payload[Any](opcode.value, data, seq, Option(event.value).filter(_.nonEmpty))
+      } yield Payload[Any](opcode, data, seq, event)
     }
   }
 
-  var codecs: Map[Payload.Id[_, _], Option[Codec[_]]] = Map.empty
+  var codecs: Map[Payload.Id, Option[Codec[_]]] = Map.empty
 
-  def register(even: Event.Name[Nothing]): Unit = {
+  def register(even: Event.Name): Unit = {
     val id = Payload.Id(Operation.Dispatch, even)
     codecs = codecs ++ Map(id -> None)
   }
 
-  def register(opcode: Operation.Code[Nothing]): Unit = {
+  def register(opcode: Operation.Code): Unit = {
     val id = Payload.Id(opcode, Event.None)
     codecs = codecs ++ Map(id -> None)
   }
 
-  def register[T: Encoder: Decoder](even: Event.Name[_]): Unit = register[T](Operation.Dispatch, even)
+  def register[T: Encoder: Decoder](even: Event.Name with Entity[T]): Unit = register[T](Operation.Dispatch, even)
 
-  def register[T: Encoder: Decoder](opcode: Operation.Code[_]): Unit = register[T](opcode, Event.None)
+  def register[T: Encoder: Decoder](opcode: Operation.Code with Entity[T]): Unit = register[T](opcode, Event.None)
 
-  def register[T: Encoder: Decoder](opcode: Operation.Code[_], event: Event.Name[_]): Unit = {
+  def register[T: Encoder: Decoder](opcode: Operation.Code, event: Event.Name): Unit = {
     val decoder = implicitly[Decoder[T]]
     val encoder = implicitly[Encoder[T]]
     val codec   = Codec.from(decoder, encoder)
@@ -107,17 +145,19 @@ object Main extends AkkaApp("Common") {
     codecs = codecs ++ Map(id -> Some(codec))
   }
 
-  register[Payload.Hello](Operation.Hello, Event.None)
-  register[Payload.Ready](Operation.Dispatch, Event.Ready)
-  register[Int](Operation.Heartbeat)
+  register(Operation.Hello)
+  register(Event.Ready)
+  register(Operation.Heartbeat)
   register(Operation.HeartbeatAck)
 
-  val p1 = Payload(Operation.Hello.value, Some(Payload.Hello(100500)), None, Some(Event.None.value))
-  val p2 = Payload(Operation.Dispatch.value, Some(Payload.Ready("xxx-yyy-zzz")), None, Some(Event.Ready.value))
-  val p3 = Payload(Operation.Heartbeat.value, Some(500100), None, None)
-  val p4 = Payload(Operation.HeartbeatAck.value, None, None, None)
+  val p1 = Payload(Operation.Hello, Entity.Hello(100500))
+  val p2 = Payload(Event.Ready, Entity.Ready("xxx-yyy-zzz"))
+  val p3 = Payload(Operation.Heartbeat, 500100)
+  val p4 = Payload(Operation.HeartbeatAck)
 
-  val json = p4.asJson
+  def asAny[T](payload: Payload[T]): Payload[Any] = payload.asInstanceOf[Payload[Any]]
+
+  val json = asAny(p3).asJson
   println(json)
   val payload = json.as[Payload[Any]].getOrElse(throw new RuntimeException)
   println(payload)
@@ -125,10 +165,10 @@ object Main extends AkkaApp("Common") {
   processing(payload)
 
   def processing(payload: Payload[Any]): Unit = payload match {
-    case Payload(_, Some(d: Payload.Hello), _, _)               => println(s"Hello: ${d.heartbeatInterval}")
-    case Payload(_, Some(d: Payload.Ready), _, _)               => println(s"Ready: ${d.sessionId}")
-    case Payload(Operation.Heartbeat.value, Some(d: Int), _, _) => println(s"Heartbeat: $d")
-    case Payload(Operation.HeartbeatAck.value, _, _, _)         => println(s"HeartbeatAck")
+    case Payload(_, Some(e: Entity.Hello), _, _)          => println(s"Hello: ${e.heartbeatInterval}")
+    case Payload(_, Some(e: Entity.Ready), _, _)          => println(s"Ready: ${e.sessionId}")
+    case Payload(Operation.Heartbeat, Some(e: Int), _, _) => println(s"Heartbeat: $e")
+    case Payload(Operation.HeartbeatAck, _, _, _)         => println(s"HeartbeatAck")
   }
 
 }
