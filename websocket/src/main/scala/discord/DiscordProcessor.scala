@@ -69,15 +69,16 @@ object DiscordProcessor {
       }
 
     private def pull: GatewaysMessage => RIO[AppEnv, Unit] = {
-      case GatewaysMessages.Hello(payload)   => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
-      case GatewaysMessages.HeartbeatAck     => heartbeatAck
-      case GatewaysMessages.Message(payload) => log.info(s"message from ${payload.author.username}: ${payload.content}")
-      case msg                               => log.warn(s"Undefined msg: $msg")
+      case GatewaysMessages.Hello(payload) => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
+      case GatewaysMessages.HeartbeatAck   => heartbeatAck
+      case GatewaysMessages.MessageCreate(payload) =>
+        log.info(s"message from ${payload.author.username}: ${payload.content}")
+      case msg => log.warn(s"Undefined msg: $msg")
     }
 
     def heartbeat(interval: Int): RIO[AppEnv, Unit] = {
       val task = for {
-        - <- push(ctx => GatewaysMessages.Heartbeat(ctx.seqNumber))
+        _ <- push(ctx => GatewaysMessages.Heartbeat(ctx.seqNumber))
       } yield ()
       log.info(s"heartbeat $interval") *> task
         .repeat(Schedule.spaced(interval.millis))
@@ -105,6 +106,13 @@ object DiscordProcessor {
         identify = entities.Identify(token, properties, intents, presence = Some(presence))
         _ <- push(GatewaysMessages.Identify(identify))
       } yield ()
+
+//    def testMessage = {
+//      val payload = entities.Message(
+//
+//      )
+//      val msg = GatewaysMessages.Message()
+//    }
   }
 
   def live(token: String): ULayer[Has[WS => Service]] =

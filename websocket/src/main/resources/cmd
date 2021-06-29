@@ -1,0 +1,6 @@
+https://discord.com/api/v9/
+User-Agent: DiscordBot (http://white-guard.su, 0.0.0)
+Authorization: Bot {token}
+
+curl -vvv -X POST -H "Authorization: Bot {token}" -H "User-Agent: DiscordBot ($url, $versionNumber)" -H "User-Agent: DiscordBot (http://white-guard.su, 0.0.0)" -H "Content-Type: application/json" -d "{\"content\":\"Hello, World!\",\"tts\":false,\"embeds\":[{\"title\":\"Hello, Embed!\",\"description\":\"This is an embedded message.\"}]}" https://discord.com/api/v9/channels/523649095475134467/messages
+

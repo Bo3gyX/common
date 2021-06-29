@@ -24,6 +24,7 @@ object Curl {
 //  val curl = s"curl -vvv -X $method -H $contentType -H $userAgent $host $proxy $cert $key"
   val curl = s"curl -v -X $method -H '$contentType' -H '$userAgent' $host $proxy $certType $certPath"
 
+  val r ="{\"content\":\"Hello, World!\",\"tts\":false,\"embeds\":[{\"title\":\"Hello, Embed!\",\"description\":\"This is an embedded message.\"}]}"
   println(curl)
 
 }

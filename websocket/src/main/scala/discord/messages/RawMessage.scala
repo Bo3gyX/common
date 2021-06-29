@@ -18,8 +18,8 @@ object RawMessage extends discord.entities.JsonConverter {
       Right(GatewaysMessages.HeartbeatAck)
     case (Opcode.Identify, Some(json), _) =>
       json.as[entities.Identify].map(GatewaysMessages.Identify)
-    case (Opcode.Event, Some(json), Some("MESSAGE_CREATE")) =>
-      json.as[entities.Message].map(GatewaysMessages.Message)
+    case (Opcode.Dispatch, Some(json), Some("MESSAGE_CREATE")) =>
+      json.as[entities.Message].map(GatewaysMessages.MessageCreate)
     case x =>
       Left(DecodingFailure(s"Unsupported message: $x", List.empty))
   }
