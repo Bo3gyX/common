@@ -8,19 +8,26 @@ import io.circe.syntax.EncoderOps
 
 object Main extends AkkaApp("Common") {
 
-  case class Payload[T](opcode: Operation.Code, data: Option[T], s: Option[Int], event: Event.Name)
+  trait Payload[+T] {
+    def opcode: Operation.Code
+    def data: Option[T]
+    def s: Option[Int]
+    def event: Event.Name
+  }
 
   object Payload {
     case class Id(opcode: Operation.Code, event: Event.Name)
 
+    case class Raw[T](opcode: Operation.Code, data: Option[T], s: Option[Int], event: Event.Name) extends Payload[T]
+
     def apply(opcode: Operation.Code): Payload[Nothing] =
-      Payload(opcode, None, None, Event.None)
+      Raw(opcode, None, None, Event.None)
 
-    def apply[T](opcode: Operation.Code, entity: T): Payload[T] =
-      Payload(opcode, Some(entity), None, Event.None)
+    def apply[T](opcode: Operation.Code with Entity[T], entity: T): Payload[T] =
+      Raw(opcode, Some(entity), None, Event.None)
 
-    def apply[T](event: Event.Name, entity: T): Payload[T] =
-      Payload(Operation.Dispatch, Some(entity), None, event)
+    def apply[T](event: Event.Name with Entity[T], entity: T): Payload[T] =
+      Raw(Operation.Dispatch, Some(entity), None, event)
   }
 
   trait Entity[T]
@@ -92,9 +99,9 @@ object Main extends AkkaApp("Common") {
 
     override def apply(a: Payload[Any]): Json = {
       val id    = Payload.Id(a.opcode, a.event)
-      val codec = codecs(id)
+      val codec = codecs(id).map(_.asInstanceOf[Encoder[Any]])
       val data = for {
-        c <- codec.map(_.asInstanceOf[Encoder[Any]])
+        c <- codec
         d <- a.data
       } yield d.asJson(c)
 
@@ -117,7 +124,7 @@ object Main extends AkkaApp("Common") {
         decoder = codecs(id).map(_.asInstanceOf[Decoder[Any]])
         data <- if (decoder.isEmpty) Right(None) else c.downField("d").as[Any](decoder.get).map(Option(_))
         seq  <- c.downField("s").as[Option[Int]]
-      } yield Payload[Any](opcode, data, seq, event)
+      } yield Payload.Raw[Any](opcode, data, seq, event)
     }
   }
 
@@ -157,7 +164,7 @@ object Main extends AkkaApp("Common") {
 
   def asAny[T](payload: Payload[T]): Payload[Any] = payload.asInstanceOf[Payload[Any]]
 
-  val json = asAny(p3).asJson
+  val json = asAny(p1).asJson
   println(json)
   val payload = json.as[Payload[Any]].getOrElse(throw new RuntimeException)
   println(payload)
@@ -165,10 +172,11 @@ object Main extends AkkaApp("Common") {
   processing(payload)
 
   def processing(payload: Payload[Any]): Unit = payload match {
-    case Payload(_, Some(e: Entity.Hello), _, _)          => println(s"Hello: ${e.heartbeatInterval}")
-    case Payload(_, Some(e: Entity.Ready), _, _)          => println(s"Ready: ${e.sessionId}")
-    case Payload(Operation.Heartbeat, Some(e: Int), _, _) => println(s"Heartbeat: $e")
-    case Payload(Operation.HeartbeatAck, _, _, _)         => println(s"HeartbeatAck")
+    case Payload.Raw(_, Some(e: Entity.Hello), _, _)          => println(s"Hello: ${e.heartbeatInterval}")
+    case Payload.Raw(_, Some(e: Entity.Ready), _, _)          => println(s"Ready: ${e.sessionId}")
+    case Payload.Raw(Operation.Heartbeat, Some(e: Int), _, _) => println(s"Heartbeat: $e")
+    case Payload.Raw(Operation.HeartbeatAck, _, _, _)         => println(s"HeartbeatAck")
+
   }
 
 }
