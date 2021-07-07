@@ -6,12 +6,6 @@ ThisBuild / scalaVersion     := "2.13.5"
 scalacOptions in ThisBuild   ++= Seq("-unchecked", "-deprecation", "-Ymacro-annotations")
 enablePlugins(PackPlugin)
 
-lazy val bank = (project in file("bank"))
-  .settings(
-    name := "bank"
-  )
-  .dependsOn(core, util)
-
 lazy val scheduler = (project in file("scheduler"))
   .settings(
     name := "scheduler"

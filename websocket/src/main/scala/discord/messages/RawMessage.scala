@@ -1,11 +1,10 @@
 package discord.messages
 
-import discord.{entities, Opcode}
+import discord.{Opcode, entities}
 import io.circe.Decoder.Result
 import io.circe.{DecodingFailure, Encoder, Json}
-import websocket.client.WsProcessor.WsMessage
 
-case class RawMessage(op: Opcode, d: Option[Json], s: Option[Int], t: Option[String]) extends WsMessage
+case class RawMessage(op: Opcode, d: Option[Json], s: Option[Int], t: Option[String])
 
 object RawMessage extends discord.entities.JsonConverter {
 

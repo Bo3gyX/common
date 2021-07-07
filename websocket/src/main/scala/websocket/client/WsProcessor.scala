@@ -9,9 +9,7 @@ object WsProcessor {
   type ENV[R] = RIO[AppEnv, R]
   type WS     = WebSocket[ENV]
 
-  trait WsMessage extends Processor.Message
-
-  trait Service[M <: WsMessage] extends Processor.Service[AppEnv, M] {
+  trait Service[M] extends Processor.Service[AppEnv, M] {
     def ws: WS
   }
 

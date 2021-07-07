@@ -1,14 +1,11 @@
 package websocket.client
 
 import zio.RIO
-import zio.logging.Logging
+import zio.logging.{log, Logging}
 
 object Processor {
 
-  trait Message
-  trait Context
-
-  trait Service[R, M <: Message] {
+  trait Service[R, M] {
     def init: RIO[R, Unit]
     def receive: RIO[R, M]
     def send: RIO[R, Unit]
@@ -16,11 +13,19 @@ object Processor {
 
     def run: RIO[R with Logging, Unit] = {
       for {
-        _  <- init
-        f1 <- consume.forever.fork
-        f2 <- produce.forever.fork
-        _  <- f1.join
-        _  <- f2.join
+        _ <- init
+        f1 <- consume
+          .catchAll(err => log.throwable("consume error", err))
+          .ignore
+          .forever
+          .fork
+        f2 <- produce
+          .catchAll(err => log.throwable("produce error", err))
+          .ignore
+          .forever
+          .fork
+        _ <- f1.join
+        _ <- f2.join
       } yield ()
     }
 
