@@ -2,4 +2,8 @@ package common
 
 import _root_.util.AkkaApp
 
-object Main extends AkkaApp("Common") {}
+object Main extends AkkaApp("Common") {
+
+
+
+}

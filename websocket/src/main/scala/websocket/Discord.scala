@@ -2,7 +2,6 @@ package websocket
 
 import com.typesafe.config.{Config, ConfigFactory}
 import discord.DiscordProcessor
-import discord.DiscordProcessor.DiscordState
 import sttp.client3.asynchttpclient.zio.{sendR, AsyncHttpClientZioBackend, SttpClient}
 import sttp.client3.{asWebSocketAlways, basicRequest, Response, UriContext}
 import util.zio.ZioRunner

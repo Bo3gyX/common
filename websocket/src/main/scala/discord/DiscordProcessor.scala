@@ -2,9 +2,9 @@ package discord
 
 import discord.entities.Activity.ActivityType
 import discord.entities._
-import discord.gateway.{Event, Operation, Payload}
+import discord.gateway._
+import io.circe.parser
 import io.circe.syntax.EncoderOps
-import io.circe.{parser, Error}
 import util.zio.ZioRunner.AppEnv
 import websocket.client.WsProcessor
 import websocket.client.WsProcessor.WS
@@ -28,12 +28,6 @@ object DiscordProcessor {
     extends Service
     with gateway.JsonConverter {
 
-    register(Operation.Hello)
-    register(Operation.Heartbeat)
-    register(Operation.HeartbeatAck)
-    register(Operation.Identify)
-    register(Event.MessageCreate)
-
     private def push(msg: Payload): UIO[Unit] = push(_ => msg)
 
     private def push(f: DiscordState => Payload): UIO[Unit] =
@@ -43,49 +37,40 @@ object DiscordProcessor {
 
     override def receive: RIO[AppEnv, Payload] =
       for {
-        json   <- ws.receiveText()
-        _      <- log.info(s"receive: $json")
-        parsed <- Task(parser.parse(json).flatMap(_.as[Payload]))
-//          .flatMapError(err =>
-//          for {
-//            _ <- log.throwable("parse error", err)
-//          } yield err
-//        )
-        raw <- RIO.fromEither(parsed)
-        _   <- log.info(s"parsed as: $raw")
-      } yield raw
+        json    <- ws.receiveText()
+        _       <- log.info(s"receive: $json")
+        parsed  <- Task(parser.parse(json).flatMap(_.as[Payload]))
+        payload <- RIO.fromEither(parsed)
+        _       <- log.info(s"parsed as: $payload")
+      } yield payload
 
     override def send: RIO[AppEnv, Unit] =
       for {
-        f     <- out.take
-        state <- state.get
-        raw   <- Task(f(state))
-        json  <- Task(raw.asJson.deepDropNullValues)
-        _     <- ws.sendText(json.noSpaces)
-        _     <- log.info(s"send: ${json.spaces2}")
+        f       <- out.take
+        state   <- state.get
+        payload <- Task(f(state))
+        json    <- Task(payload.asJson.deepDropNullValues)
+        _       <- ws.sendText(json.noSpaces)
+        _       <- log.info(s"send: ${json.spaces2}")
       } yield ()
 
     override def handler: Payload => RIO[AppEnv, Unit] =
-      raw =>
-        (for {
-          _ <- log.info(s"pull: $raw")
-          _ <- pull(raw)
-        } yield ()).catchSome {
-          case e: Error => log.throwable("handler error", e)
-        }.ignore
+      payload =>
+        for {
+          _ <- state.update(old => old.copy(seqNumber = payload.s.getOrElse(old.seqNumber)))
+          _ <- pull(payload)
+        } yield ()
 
     private def pull: Payload => RIO[AppEnv, Unit] = {
-      case Payload.Raw(_, Some(Hello(heartbeatInterval)), _, _) =>
-        heartbeat(heartbeatInterval) *> identify.delay(1.seconds)
-      case Payload.Raw(Operation.HeartbeatAck, _, _, _) => heartbeatAck
-      case Payload.Raw(_, Some(message: Message), _, _) =>
-        log.info(s"message from ${message.author.username}: ${message.content}")
-      case msg => log.warn(s"Undefined msg: $msg")
+      case gateway.Hello(payload)         => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
+      case gateway.HeartbeatAck           => heartbeatAck
+      case gateway.MessageCreate(payload) => messageCreate(payload)
+      case payload                        => log.warn(s"Unsupported payload: $payload")
     }
 
     private def heartbeat(interval: Int): RIO[AppEnv, Unit] = {
       val task = for {
-        _ <- push(ctx => Payload(Operation.Heartbeat, ctx.seqNumber))
+        _ <- push(ctx => gateway.Heartbeat(ctx.seqNumber))
       } yield ()
       log.info(s"heartbeat $interval") *> task
         .repeat(Schedule.spaced(interval.millis))
@@ -110,9 +95,11 @@ object DiscordProcessor {
         )
         intents: Intent = Intent.GUILD_MESSAGES
         identify        = entities.Identify(token, properties, intents, presence = Some(presence))
-        _ <- push(Payload(Operation.Identify, identify))
+        _ <- push(gateway.Identify(identify))
       } yield ()
 
+    private def messageCreate(message: entities.Message): RIO[AppEnv, Unit] =
+      log.info(s"message of ${message.author.username}: ${message.content}")
   }
 
   def live(token: String): ULayer[Has[WS => Service]] =
