@@ -7,6 +7,6 @@ case class Ready(
     user: User,
     guilds: Seq[Json], //todo Json
     sessionId: String,
-    shard: GuildShard,
+    shard: Option[GuildShard],
     application: Json //todo Json
   )

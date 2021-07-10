@@ -14,7 +14,7 @@ import zio.{Has, Queue, RIO, Ref, Schedule, Task, UIO, ULayer, ZIO, ZManaged}
 
 object DiscordProcessor {
 
-  case class DiscordState(seqNumber: Int)
+  case class DiscordState(seqNumber: Int, ready: Option[Ready] = None)
 
   trait Service extends WsProcessor.Service[Payload] {
     def token: String
@@ -62,21 +62,29 @@ object DiscordProcessor {
         } yield ()
 
     private def pull: Payload => RIO[AppEnv, Unit] = {
-      case gateway.Hello(payload)         => heartbeat(payload.heartbeatInterval) *> identify.delay(1.seconds)
+      case gateway.Hello(payload)         => hello(payload) *> identify.delay(1.seconds)
+      case gateway.Heartbeat(payload)     => heartbeat(payload)
       case gateway.HeartbeatAck           => heartbeatAck
+      case gateway.Ready(payload)         => ready(payload)
       case gateway.MessageCreate(payload) => messageCreate(payload)
       case payload                        => log.warn(s"Unsupported payload: $payload")
     }
 
-    private def heartbeat(interval: Int): RIO[AppEnv, Unit] = {
+    private def hello(hello: entities.Hello): RIO[AppEnv, Unit] = {
       val task = for {
         _ <- push(ctx => gateway.Heartbeat(ctx.seqNumber))
       } yield ()
-      log.info(s"heartbeat $interval") *> task
-        .repeat(Schedule.spaced(interval.millis))
+      log.info(s"hello: ${hello.heartbeatInterval}") *> task
+        .repeat(Schedule.spaced(hello.heartbeatInterval.millis))
         .fork
         .unit
     }
+
+    private def heartbeat(seqNumber: Int): RIO[AppEnv, Unit] =
+      for {
+        _ <- log.info(s"heartbeat: $seqNumber")
+        _ <- push(gateway.HeartbeatAck)
+      } yield ()
 
     private def heartbeatAck: RIO[AppEnv, Unit] =
       for {
@@ -96,6 +104,12 @@ object DiscordProcessor {
         intents: Intent = Intent.GUILD_MESSAGES
         identify        = entities.Identify(token, properties, intents, presence = Some(presence))
         _ <- push(gateway.Identify(identify))
+      } yield ()
+
+    private def ready(ready: entities.Ready): RIO[AppEnv, Unit] =
+      for {
+        _ <- log.info(s"Ready: my name is ${ready.user.username}")
+        _ <- state.update(old => old.copy(ready = Some(ready)))
       } yield ()
 
     private def messageCreate(message: entities.Message): RIO[AppEnv, Unit] =

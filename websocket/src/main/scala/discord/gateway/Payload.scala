@@ -2,6 +2,7 @@ package discord.gateway
 
 import io.circe.{Codec, Decoder, Encoder, Json}
 import io.circe.syntax.EncoderOps
+import util.Logger
 
 import scala.reflect.ClassTag
 
@@ -9,14 +10,28 @@ case class Payload(op: Operation.Code[_], d: Option[Json], s: Option[Int], t: Op
 
 object Payload {
 
-  trait Data[T] extends { this: Payload =>
+  trait Data[T] extends Logger { this: Payload =>
     def codec: Codec[T]
 
     def apply(payload: T): Payload =
       Payload(op, Some(payload.asJson(codec)), None, t)
 
-    def unapply(payload: Payload)(implicit ct: ClassTag[T]): Option[T] =
-      if (payload.op == op && payload.t == t) payload.d.map(_.as[T](codec)).flatMap(_.toOption) else None
+    def unapply(payload: Payload)(implicit ct: ClassTag[T]): Option[T] = {
+      def decode = payload.d.map(_.as[T](codec)).flatMap {
+        case Right(v) => Some(v)
+        case Left(err) =>
+          log.error(s"$ct: ${payload.op}/${payload.t}: parse error", err)
+          None
+      }
+
+      if (payload.op == op && payload.t == t) {
+        log.info(s"$ct: ${payload.op}/${payload.t}: try decode")
+        decode
+      } else {
+        log.info(s"$ct: ${payload.op}/${payload.t}: skip")
+        None
+      }
+    }
 
   }
 
