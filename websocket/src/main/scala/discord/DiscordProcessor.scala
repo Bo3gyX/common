@@ -14,17 +14,31 @@ import zio.{Has, Queue, RIO, Ref, Schedule, Task, UIO, ULayer, ZIO, ZManaged}
 
 object DiscordProcessor {
 
-  case class DiscordState(seqNumber: Int, ready: Option[Ready] = None)
-
-  trait Service extends WsProcessor.Service[Payload] {
-    def token: String
+  case class HeartbeatState(isWaitAck: Boolean, attempt: Int) {
+    def withWaitAck(isWaitAck: Boolean): HeartbeatState = this.copy(isWaitAck = isWaitAck)
+    def incAttempt: HeartbeatState                      = this.copy(attempt = attempt + 1)
+    def reset: HeartbeatState                           = HeartbeatState.init
   }
 
-  class DiscordProcessorImpl(
-      val token: String,
-      state: Ref[DiscordState],
-      out: Queue[DiscordState => Payload]
-    )(val ws: WS)
+  object HeartbeatState {
+    def init: HeartbeatState = HeartbeatState(isWaitAck = false, 0)
+  }
+
+  case class DiscordState(seqNumber: Int, ready: Option[Ready], heartbeat: HeartbeatState) {
+    def withSeqNumber(seqNumber: Int): DiscordState            = this.copy(seqNumber = seqNumber)
+    def withReady(ready: Ready): DiscordState                  = this.copy(ready = Some(ready))
+    def withHeartbeat(heartbeat: HeartbeatState): DiscordState = this.copy(heartbeat = heartbeat)
+    def waitAck: DiscordState                                  = withHeartbeat(heartbeat.withWaitAck(true))
+    def resetWaitAck: DiscordState                             = withHeartbeat(heartbeat.withWaitAck(false))
+  }
+
+  object DiscordState {
+    def init: DiscordState = DiscordState(0, None, HeartbeatState.init)
+  }
+
+  trait Service extends WsProcessor.Service[Payload]
+
+  class DiscordProcessorImpl(token: String, state: Ref[DiscordState], out: Queue[DiscordState => Payload])(val ws: WS)
     extends Service
     with gateway.JsonConverter {
 
@@ -72,7 +86,20 @@ object DiscordProcessor {
 
     private def hello(hello: entities.Hello): RIO[AppEnv, Unit] = {
       val task = for {
-        _ <- push(ctx => gateway.Heartbeat(ctx.seqNumber))
+        ctx <- state.get
+        heartbeat = ctx.heartbeat
+        _ <- heartbeat.isWaitAck match {
+          case true if heartbeat.attempt > 2 =>
+            log.error(s"no ACK response more than ${heartbeat.attempt} times")
+          case true =>
+            val updatedHeartbeat = heartbeat.incAttempt
+            log.warn(s"no ACK response, attempt: ${updatedHeartbeat.attempt}") *>
+              state.update(ctx => ctx.withHeartbeat(updatedHeartbeat)) *>
+              push(gateway.Heartbeat(ctx.seqNumber))
+          case _ =>
+            state.update(_.waitAck) *>
+              push(gateway.Heartbeat(ctx.seqNumber))
+        }
       } yield ()
       log.info(s"hello: ${hello.heartbeatInterval}") *> task
         .repeat(Schedule.spaced(hello.heartbeatInterval.millis))
@@ -88,6 +115,7 @@ object DiscordProcessor {
 
     private def heartbeatAck: RIO[AppEnv, Unit] =
       for {
+        _ <- state.update(_.resetWaitAck)
         _ <- log.info("HeartbeatAck")
       } yield ()
 
@@ -119,7 +147,7 @@ object DiscordProcessor {
   def live(token: String): ULayer[Has[WS => Service]] =
     ZManaged.fromEffect {
       for {
-        state <- Ref.make(DiscordState(0))
+        state <- Ref.make(DiscordState.init)
         out   <- Queue.unbounded[DiscordState => Payload]
         processor = (ws: WS) => new DiscordProcessorImpl(token, state, out)(ws)
       } yield processor
